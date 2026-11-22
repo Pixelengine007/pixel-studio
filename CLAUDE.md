@@ -31,10 +31,18 @@ Logins and account approvals, anything that costs money, legal and tax matters, 
 - Never commit secrets (Instagram keys, passwords). They live in the cloud environment's secrets.
 
 ## Repository layout
-- `games/` — one folder per game
-- `tools/` — bot tester, clip recorder, posting script
-- `logs/` — research log, decision log, stats
-- `docs/` — plan and lessons
+- `games/` — one folder per game; copy `games/_template/` to start
+- `shared/studio.js` — grid (180 × 320), palette, code-drawn sprites, pixel font, input, sound, bot/clip hooks
+- `vendor/` — Phaser 3.90
+- `tools/` — `bot_test.py`, `record_clip.py`, `instagram.py` (see README)
+- `clips/` — published clips (served by GitHub Pages so Instagram can fetch them)
+- `logs/` — research log, decision log, posts, stats, comments
+- `docs/` — lessons
+
+## Every game must
+- Call `Studio.registerApi({ observe, status, reset, policies: { intended } })` so the tools can play it.
+- Use fixed-step logic based on `delta`, `Studio.rng(seed)` for randomness (never `Math.random`), and `Studio.sfx()` for sound.
+- Pass `tools/bot_test.py`: no page errors, no trivial strategy (idle, spam, hold, random) wins, the intended strategy can win.
 
 ## Current status
 Phase 1 — setup. Plan: "Pixel Game Studio — Step Plan" in the Claude Project.
