@@ -19,6 +19,7 @@ Logins and account approvals, anything that costs money, legal and tax matters, 
 - Small scope: one core action, one screen or room, about 1–3 minutes of play per prototype.
 - Phaser for fast loading on phones. Portrait first.
 - One fixed pixel grid per game, whole-number nearest-neighbour scaling only. The grid itself is a research decision.
+- Visual bar: `docs/visual-standard.md` (Outrun the Flock). Nothing below it is posted.
 - Automated tests prove mechanics, never fun. Before publishing, review assuming failure: seams, floating or sliding objects, art that contradicts collision, mixed pixel sizes, placeholder art, unclear goal, expensive retry.
 - Audience data is the judge of fun.
 
