@@ -38,3 +38,7 @@ Read before starting a new game. Newest game first; each lesson says what to do 
 - Thomas saw a black screen right after I published a new version onto a link he already had open. The published file was byte-identical to one that ran in my phone-sized and desktop tests, so I could not reproduce it.
 - Changes: links for Thomas are now built with `tools/bundle.py <game> --site` (index.html + phaser.min.js published together, nothing loaded from another server), every page shows "Loading..." and then any error as text on the screen, and a changed toy goes on a fresh link instead of replacing a page he may have open.
 - If a page is ever blank again, the first question is what the screen says, not a guess.
+
+## Using the engine is not the same as matching the look (Tanglefoot, 24 Nov 2026)
+- The first Tanglefoot picture used the Night Ferry pixel engine and still did not look like Night Ferry; Thomas saw it at once. The look is the composition (sky, moon, layers, mist, light pools, characters with faces), not the renderer.
+- Before sending any new art: put a screenshot next to Night Ferry at the same size and compare. If the new one has fewer layers, flatter ground, smaller or faceless characters, it is not ready.

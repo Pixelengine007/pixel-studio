@@ -22,3 +22,5 @@
 - Accepted or chosen: Brambleguard (forest hero fights thorn creatures, boss, the forest is restored), Stormlift Rescue (storm helicopter, winch rescue), Stormwall Bastion (liked, kept for later), Outrun the Flock (dog brings sheep home, fox threat, homecoming), Night Moth (moth escapes an owl; chosen from horror concepts; liked the flying).
 - Rejected: Active Lane Towers, Orbit Sling, Recoil Rescue, Crossguard Bastion ("old-school, very simple app minigames"; missing "fun, substantial challenge, and the sense of a larger worthwhile game"), Cinderline Warden (wildfire: depth without fun, too specialised), Abyssal Signal, Beaconfall, Rootbound.
 - What the accepted ones share: you are a character on a mission, something hunts or threatens you, and the ending pays off. Two of them turn on baiting an attacker into a mistake (the owl's swoop hits the beam; Brambleguard's feint into the stump).
+
+| 24 Nov 2026 | Tanglefoot first look (art) | Rejected the art | "i dont have the feeling the graphics arte the same as the previous game" | Reference stays Night Ferry / River Run: painted night scene with depth, not a flat field |
