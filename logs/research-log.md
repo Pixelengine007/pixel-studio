@@ -11,6 +11,28 @@ Every research round: date, question, findings with sources, conclusion. Newest 
   - Jam feedback (itch.io comment on a crab shell puzzle): fit was confusing because every shell looked the same, and players wanted instant reset. So shell sizes must be visibly different, and fit must show on the crab.
 - **Conclusion:** build "Shell Swap". New core verb (place objects instead of lure), a living system (crabs queue, swap, bully, panic), a built-in satisfying chain-reaction clip moment, and cute animals with comic behaviour (eviction fights, gull bonking a shell).
 
+## Round 7 — 2026-11-23: own ideas first, web check afterwards
+
+Method (new rule): eight ideas thought up from real life, without searching. Only then one search each to see whether it already exists.
+
+**Survived the check (pitched):**
+| # | Idea | Where it comes from | What the check found |
+|---|---|---|---|
+| 1 | False trail: the hounds follow your tracks, not you | Hares and foxes double back and leap aside to break their scent; the children's game paper chase / hare and hounds ([Wikipedia](https://www.wikipedia.org/wiki/Paper_Chase_(game))) | Two small jam games where dogs follow a scent or footprints ([Foxtprint](https://less-than-three.itch.io/foxtprint), a GMTK jam entry); no phone game |
+| 2 | Wolf net: your two packmates take their places from where you stand, so your position swings a three-point net around the herd | Wolves hunting; a shepherd working two dogs at once | Phone wolf games are simulators and strategy games; none plays like this |
+| 3 | Your feet are your sword: you only control your footwork; the blade strikes when the distance is right | Fencing is taught as a game of distance; coaches run drills with no parries, only footwork ([fencing.net glove game](https://fencing.net/615/distance-control-glove-game/)) | Fencing phone games use swipes or buttons for the blade; none is footwork only |
+
+**Dropped after the check (they already exist):**
+- Firefly whose light is both its engine and what predators see: almost the same game came out last month ([Glow Bait: Night Keeper](https://playgama.com/EN/game/glow-bait-night-keeper), portrait, phones).
+- Keep a campfire alive in the snow, fetch wood from the dark, wolves at the edge of the light: many versions (Warm on Steam, several jam games).
+- You are a flame racing the rain to light a beacon: several jam games and a PC game ([Forest Fire](https://store.epicgames.com/p/forest-fire-b4bb7e)) play as fire against rain.
+- Storm chaser placing probes in a tornado's path: several PC and Roblox games.
+- Not checked, so not pitched: fishing boat whose wake is a net around a shoal.
+
+Lesson: thinking of an idea myself does not make it new; four of eight already existed. The check stays, but it comes last.
+
+My pick: 1 and 2.
+
 ## Round 6 — 2026-11-23: third idea round (the hours test)
 
 Thomas: the activity itself must be fun for a long time; a single trick is not. Depth in design terms: the space of meaningful choices that opens up as the player gets better ([Game Developer: What is depth](https://www.gamedeveloper.com/game-platforms/what-is-depth-and-how-do-you-add-it-to-your-game-)); a low skill floor with a high skill ceiling ([Game Design Skills](https://gamedesignskills.com/gaming/skill-ceiling-skill-floor/)). New test question 10: name the proof that people do this activity for hours.

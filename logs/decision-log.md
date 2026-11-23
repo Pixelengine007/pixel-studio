@@ -131,3 +131,8 @@ Every decision: date, what, why, sources. Newest first.
 - Decision: interest test question 10, the hours test (a skill with a visible gap between beginner and expert, plus named proof that people do it for hours). It weighs most.
 - Asked which activities he could do for hours: he ticked all four types and "either" for session shape, so depth decides, not type.
 - Round 3 pitched: heavy sword, trap house, thin ice, night flight, Outrun the Flock for phones. Sources in research-log round 6.
+
+## 2026-11-23 — Ideas must be my own; round 4 pitched
+- Thomas: "now you are using ideas from the internet, you have to think of them youreself". He is right about round 3: three of the five started from existing games, which I even gave as the "proof of hours".
+- Decision: ideas start from real life and my own thinking; never from an existing game. The web is only used afterwards to check whether the idea exists. Proof for the hours test must come from real life or from Thomas's own play, not from another game.
+- Round 4: eight own ideas; four dropped because they already exist; three pitched (false trail, wolf net, your feet are your sword). Sources in research-log round 7.
