@@ -91,3 +91,19 @@ Every decision: date, what, why, sources. Newest first.
 - Fix: splash, bubble and sparkle randomness now uses its own generator (this.fx), so visual effects never shift gameplay events.
 - Bot test (20 seeds): idle/spam/hold/random lose; intended 100% (4.5/5), casual 100% (4.2), clumsy 90% (3.5). Phone check: 60 fps, no errors.
 - Published: artifact version 1795457732-47bd. Clip: out/night-ferry-clip.mp4 (seed 3, casual, 17 s, 1080x1920).
+
+## 2026-11-23 — Night Ferry gameplay rejected; new core "River Run" (Thomas's choice)
+- Thomas: "the gameplay is boring and does not really work, graphics are good". What broke for him: "the boat tips and I can't stop it".
+- My diagnosis: the player only reacts (counterbalances spirits that move on their own); there is no real decision; there is a delay between action and effect; spirits fall and climb back by rules the player can't influence; a 75 s run with a slow start. The bots proved the game can be won, not that it is fun.
+- Process lesson: before any art, send Thomas a 30-second playable feel test of the core action only.
+- Options pitched: Lantern Lure (my recommendation), Load the Ferry, River Run, a new game. Thomas chose **River Run**: steer the ferry down a night river; sharp turns and bumps make the spirits slide, and too hard throws them overboard; rescue them by steering over them before they drift away.
+- Decisions: top-down / high-angle view (steering and sideways sliding can't be read from the side); swerve control (the thumb stays down; the boat follows relative finger movement immediately; source: GameAnalytics on swerving vs turning); endless river with rising speed, score = distance, spirits are rescuable lives; obstacles telegraphed (rocks, logs, tentacles with a bubble warning). The old side-view Night Ferry stays in git and on its link.
+- Prior art: a 1980s raft game where passengers fall out and are picked up again (MobyGames entry), plus Rafting Adventure (dodge only). No polished phone version with passengers sliding from steering was found.
+
+## 2026-11-23 — River Run feel test 1 (games/night-ferry-river)
+- Rules: steer by swerve (relative drag). Sideways acceleration makes spirits slide (each has its own grip: Mote 900 … Old Moss 1900 px/s²); hitting the side wall faster than 250 px/s throws a spirit out. Every crash (rock, log, bank, tentacle) throws the spirit nearest the impact out (a tentacle throws two). A spirit in the water swims after the boat at 68% of its speed; steer over it to save it before it leaves the bottom of the screen. A tentacle shows a red "!" and bubbles about 1 s before it rises where the boat was. About 40 s river; you lose when all 5 are gone; your score is how many get home.
+- Why: a crash causing a spirit to fall out is a clear cause and effect (the first version let doing nothing win, because bumping the banks acted like guide rails); smooth steering is the skill; rescuing gives the player an active comeback.
+- Generator: a shorter boat (128 px) and a 215 px slalom spacing (the 160 px boat could not weave between rocks 130 px apart); every pattern is checked for a passage at least one boat wide plus margin.
+- Bot test (10 seeds): idle/spam/hold/random all lose (~20 s); intended 100% (2.9 home), casual 90% (2.0), clumsy 60% (0.6). Phone viewport: about 54 fps, drag steering works.
+- Art: top-down in the same HD pixel engine (shared palette, spirits, lantern and font copied from night-ferry/pixel.js); clean grass with sparse tufts instead of a noise texture (Thomas reads noise as a grey filter).
+- Link: https://claude.ai/artifact/73E1n6fZPyekzeEkVofwh1 (feel test, not final art).
