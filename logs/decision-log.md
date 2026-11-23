@@ -119,3 +119,9 @@ Every decision: date, what, why, sources. Newest first.
 - Thomas: "all good, only like the game does not need a flock or other creatures. I did like the graphics of previous games so we can keep that".
 - Changes: the "Flock test" is now the "interest test"; question 1 no longer asks for creatures, only for something that reacts in its own way. Art rule: keep the Night Ferry / River Run look and engine.
 - Round 1 of the funnel: five one-sentence ideas pitched (lava hose, harbour tug, trolley snake, timber, long ladder); details and sources in research-log round 4. Waiting for Thomas to pick up to two for grey-box toys.
+
+## 2026-11-23 — Idea round 1 rejected; interest test gets two more questions; round 2 pitched
+- Thomas: "better, but i still dont like the concepts."
+- Diagnosis from his own earlier verdicts (project reviews 0056, 0058, 0067, 0134, 0142): he accepts games where you are a character on a mission with a threat and an ending, and rejects "simple app minigames". Round 1 was five chores with no enemy.
+- Decision: interest test questions 8 (mission, threat, ending) and 9 (level one of a bigger game). Scope per prototype stays one room and 1–3 minutes.
+- Round 2 pitched: bait the beast, don't look away, thin ice, candle thief, Outrun the Flock for phones. Sources in research-log round 5.

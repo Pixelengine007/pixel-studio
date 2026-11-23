@@ -11,6 +11,22 @@ Every research round: date, question, findings with sources, conclusion. Newest 
   - Jam feedback (itch.io comment on a crab shell puzzle): fit was confusing because every shell looked the same, and players wanted instant reset. So shell sizes must be visibly different, and fit must show on the crab.
 - **Conclusion:** build "Shell Swap". New core verb (place objects instead of lure), a living system (crabs queue, swap, bully, panic), a built-in satisfying chain-reaction clip moment, and cute animals with comic behaviour (eviction fights, gull bonking a shell).
 
+## Round 5 — 2026-11-23: second idea round (hero on a mission, a threat, an ending)
+
+Round 4's five ideas were all rejected. Thomas's earlier verdicts in the project (see taste log) show what was missing, so two questions were added to the interest test (mission + threat + ending; level one of a bigger game).
+
+| # | Idea | Existing versions found | My doubt |
+|---|---|---|---|
+| 1 | Bait the beast: you are small and unarmed; a huge beast charges at you; step aside so it smashes what you need smashed | A very common boss pattern inside bigger games ([TV Tropes: Bullfight Boss](https://tvtropes.org/pmwiki/pmwiki.php/Main/BullfightBoss)); no standalone phone game built on it was found | One beast must stay interesting for a whole level |
+| 2 | Don't look away: things in the dark only move where your lantern does not shine | Jam games ([The Night](https://colanderstudio.itch.io/thenight); Lurking in the Dark, GMTK 2019 winner); an old phone game (Darkest Fear 2); no current polished phone game found | Fear is hard to get right; Thomas found the Night Moth attic not creepy at first |
+| 3 | Thin ice: wolves chase you over a frozen lake; your skating cracks the ice; lead them over it | Nitrome's Flash game [Thin Ice](https://nitrome.wiki.gg/wiki/Thin_Ice) (2007, 20 levels, skate to cut holes); a turn-based jam game (On Thin Ice, 7DRL 2025); no phone version found | Your own cracks trap you too, which is close to Snake |
+| 4 | Candle thief: guards only see what is lit; blow out candles to make your own dark path; guards relight them | Jam and itch games (Snuffed Out, Aphotic Whispers, Let the Light Guide You) | Stealth can turn into waiting |
+| 5 | Outrun the Flock for phones, rebuilt in the new art | Phone herding games exist (Sheepdog World on iOS, several simulators, a student 2v2 game) but none is a known hit | Not new; Thomas has played it for weeks |
+
+Dropped: Pied Piper (many jam games and an old iPhone game), storm rescue by helicopter (polished phone games exist), tide crossing (walking is not fun as a toy), balloon on wind layers (not understood in 2 seconds), lamplighter (pure reacting).
+
+My pick: 1 and 2.
+
 ## Round 4 — 2026-11-23: first idea round with the interest test (creatures optional)
 
 Method: about 20 one-sentence ideas, action first, scored on the seven questions; a web check for an existing polished phone version of each finalist.
