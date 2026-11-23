@@ -114,3 +114,8 @@ Every decision: date, what, why, sources. Newest first.
 - Decision: ideas start from action + creature rule; seven-question Flock test; funnel of 20 → 5 one-sentence pitches → Thomas picks up to 2 → grey-box toys with no art → art only after he enjoys a toy. Taste log in logs/taste-log.md. No tooling (PocketForge's Concept Foundry, project review 0053, could not predict fun).
 - Sources: project reviews 0103, 0133 and 0053; "toys before games" (tinysubversions.com/2009/02/toys-before-games); Unity Learn "Why prototype?".
 - River Run and the side-view Night Ferry are parked; both links stay up. The HD pixel engine and the art lessons carry over.
+
+## 2026-11-23 — Idea system approved with one change; first idea round pitched
+- Thomas: "all good, only like the game does not need a flock or other creatures. I did like the graphics of previous games so we can keep that".
+- Changes: the "Flock test" is now the "interest test"; question 1 no longer asks for creatures, only for something that reacts in its own way. Art rule: keep the Night Ferry / River Run look and engine.
+- Round 1 of the funnel: five one-sentence ideas pitched (lava hose, harbour tug, trolley snake, timber, long ladder); details and sources in research-log round 4. Waiting for Thomas to pick up to two for grey-box toys.

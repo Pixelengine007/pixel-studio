@@ -11,6 +11,23 @@ Every research round: date, question, findings with sources, conclusion. Newest 
   - Jam feedback (itch.io comment on a crab shell puzzle): fit was confusing because every shell looked the same, and players wanted instant reset. So shell sizes must be visibly different, and fit must show on the crab.
 - **Conclusion:** build "Shell Swap". New core verb (place objects instead of lure), a living system (crabs queue, swap, bully, panic), a built-in satisfying chain-reaction clip moment, and cute animals with comic behaviour (eviction fights, gull bonking a shell).
 
+## Round 4 — 2026-11-23: first idea round with the interest test (creatures optional)
+
+Method: about 20 one-sentence ideas, action first, scored on the seven questions; a web check for an existing polished phone version of each finalist.
+
+**Pitched to Thomas (5):**
+| # | Idea | Existing versions found | Weakest question |
+|---|---|---|---|
+| 1 | Lava hose: spray water to freeze flowing lava into rock walls, steer the flow past the village | Jam games where you dig trenches or build barriers ([Lava: Divert the flow](https://josepvalls.itch.io/lava-1), Save Grindavik, Save Pompeii LD50); no hose-freezing phone game found. Real basis: Heimaey 1973 ([scienceinsights](https://scienceinsights.org/how-to-stop-lava-flow-walls-water-and-bombs/)) | 3: needs one second to see that water makes rock |
+| 2 | Harbour tug: a tiny tugboat pushes a huge drifting ship into its dock | Jam game [Tugtris](https://aufdemrand.itch.io/tugtris) (tug physics + Tetris); Tug Boat Silly (tap-to-assign puzzle, Android); Ship Mooring (serious simulator, paid). No casual phone game where you are the tug | 5: weight has to feel good or it is slow |
+| 3 | Trolley snake: push an ever longer row of shopping trolleys across a car park; the row whips and jackknifes | GMTK 2021 jam game [The Trolley Problem](https://grinky.itch.io/trolley-problem) (players: chaotic and entertaining); Steam game "Shopping Cart Pusher" announced; iOS "Cart Pusher!" is a gate runner | 7: a Steam game is coming |
+| 4 | Timber: where you stand decides where the tree falls; trees knock each other over like dominoes | iOS hypercasual [Tree Master](https://apps.apple.com/us/app/tree-master/id1551438834) (aim the fall); several jam games | 4: a decision per tree, not per second |
+| 5 | Long ladder: carry a six-metre ladder through a busy street; every turn swings both ends | Nothing found in one search (not exhaustive) | 1: could turn into dodging in disguise |
+
+**Dropped after the check (polished or crowded on phones):** leaf blower (Leaf Blower Revolution 4.8★/2.1K ratings, Leaf Blower 3D, Leaf Blower!), water ripples pushing a boat (Tap The Water, Water Ripples 2014, Ripple Ruler GMTK 2023), icebreaker ship (Icebreaker Rescue and others). Dropped for other reasons: wildfire firebreak (same idea as lava, weaker toy), helicopter with water bucket (many rope helicopter games), plate spinning (pure reacting, which Thomas rejected in Night Ferry), curling sweeper (curling games exist), puppet on strings (motor skill, no decision).
+
+My pick: 1 and 2. Lava is the strongest toy and suits our pixel light best; the tug is closest to why Flock works (small you, big thing with a will of its own, your position is the decision).
+
 ## Round 2 — 2026-11-23: which concepts fit the business plan (extended research report)
 
 Full report: "Pixel Studio Game Concepts: Which Fit the Business Plan Best" (Claude research, 23 Nov 2026). Key points:
