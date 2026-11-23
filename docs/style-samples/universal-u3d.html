@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Universal styles — 3D</title>
+<style>body { margin: 0; background: #111; }</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+</head>
+<body>
+<canvas id="c" width="600" height="1066"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const W = 300, H = 533, DPR = 2;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(DPR); renderer.setSize(W, H, false);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function skyTex(stops) {
+  const c = document.createElement('canvas'); c.width = 4; c.height = 256; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 256); stops.forEach(([t, col]) => g.addColorStop(t, col)); x.fillStyle = g; x.fillRect(0, 0, 4, 256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+// ----- two looks built from the same models: soft clay, and cel-shaded toon with ink outlines -----
+const toonRamp = (() => { const d = new Uint8Array([90, 170, 255]); const t = new THREE.DataTexture(d, 3, 1, THREE.RedFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
+const STYLE = {
+  clay: {
+    mat: (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.78, metalness: 0, emissive: o.emissive || 0x000000, emissiveIntensity: o.ei || 1 }),
+    seg: 24, outline: false,
+    pal: { grass: '#8fd27a', grass2: '#7cc76a', dirt: '#eebc84', fox: '#ff8a3d', white: '#fff6ea', dark: '#4a3640', leaf: '#5fc46a', leaf2: '#8fd96e', trunk: '#b07a50', roof: '#ff7a64', wall: '#fff1dc', water: '#8fd6ec', coin: '#ffd25a', bunny: '#f4ede6', pink: '#ffaac0', rock: '#c9c2d2', cloud: '#ffffff', fence: '#f4e2c4', flower: ['#ff9fb8', '#ffd86a', '#b9a4ff'] },
+    sky: [[0, '#9fd8ff'], [0.6, '#cdeeff'], [1, '#fff3dc']],
+  },
+  toon: {
+    mat: (color, o = {}) => new THREE.MeshToonMaterial({ color, gradientMap: toonRamp, emissive: o.emissive || 0x000000, emissiveIntensity: o.ei || 1 }),
+    seg: 14, outline: true,
+    pal: { grass: '#5cc84e', grass2: '#46b046', dirt: '#d9a25a', fox: '#ff7a1f', white: '#ffffff', dark: '#2b1d2c', leaf: '#3fb04a', leaf2: '#7ad04a', trunk: '#8a5530', roof: '#e8433a', wall: '#ffe7b8', water: '#3fb6ff', coin: '#ffcc00', bunny: '#ffffff', pink: '#ff7aa8', rock: '#a8a8c8', cloud: '#ffffff', fence: '#f0c890', flower: ['#ff4f7a', '#ffd400', '#8f6aff'] },
+    sky: [[0, '#2fa8ff'], [0.65, '#8fd8ff'], [1, '#e8fbff']],
+  },
+};
+
+function makeKit(style) {
+  const S = STYLE[style], P = S.pal;
+  const outlineMat = new THREE.MeshBasicMaterial({ color: '#1e1424', side: THREE.BackSide });
+  const mesh = (geo, color, o = {}) => {
+    const m = new THREE.Mesh(geo, S.mat(color, o)); m.castShadow = o.cast !== false; m.receiveShadow = true;
+    if (S.outline && !o.noOutline) { const ol = new THREE.Mesh(geo, outlineMat); ol.scale.setScalar(1 + (o.ol || 0.06)); m.add(ol); }
+    return m;
+  };
+  const sph = (r, color, o) => mesh(new THREE.SphereGeometry(r, S.seg, Math.round(S.seg * 0.75)), color, o);
+  const cap = (r, l, color, o) => mesh(new THREE.CapsuleGeometry(r, l, 6, S.seg), color, o);
+  const cone = (r, h, color, o) => mesh(new THREE.ConeGeometry(r, h, S.seg), color, o);
+  const cyl = (r1, r2, h, color, o) => mesh(new THREE.CylinderGeometry(r1, r2, h, S.seg), color, o);
+  const rbox = (w, h, d, r, color, o) => mesh(new RoundedBoxGeometry(w, h, d, 3, r), color, o);
+  const at = (m, x, y, z, rx = 0, ry = 0, rz = 0, s = 1) => { m.position.set(x, y, z); m.rotation.set(rx, ry, rz); if (s !== 1) m.scale.setScalar(s); return m; };
+  const group = (...items) => { const g = new THREE.Group(); items.forEach((i) => g.add(i)); return g; };
+
+  const fox = () => {
+    const g = group(
+      at(cap(0.42, 0.9, P.fox), 0, 0.95, 0, 0, 0, Math.PI / 2),
+      at(sph(0.36, P.white), 0.45, 0.82, 0, 0, 0, 0, 1),
+      at(sph(0.46, P.fox), 0.82, 1.42, 0),
+      at(sph(0.3, P.white), 1.12, 1.3, 0),
+      at(cone(0.17, 0.42, P.fox), 0.72, 1.92, 0.22, 0.25, 0, 0.15),
+      at(cone(0.17, 0.42, P.fox), 0.72, 1.92, -0.22, -0.25, 0, 0.15),
+      at(sph(0.08, P.dark, { noOutline: true }), 1.42, 1.36, 0),
+      at(sph(0.07, P.dark, { noOutline: true }), 1.02, 1.52, 0.33),
+      at(sph(0.07, P.dark, { noOutline: true }), 1.02, 1.52, -0.33),
+    );
+    [[0.45, 0.22], [0.45, -0.22], [-0.45, 0.22], [-0.45, -0.22]].forEach(([x, z], i) => g.add(at(cap(0.11, 0.42, P.dark), x + (i % 2 ? 0.08 : -0.08), 0.36, z, 0, 0, i < 2 ? 0.2 : -0.2)));
+    const tail = at(cap(0.3, 0.8, P.fox), -0.95, 1.2, 0, 0, 0, Math.PI / 2 + 0.6); g.add(tail);
+    g.add(at(sph(0.22, P.white), -1.42, 1.5, 0));
+    return g;
+  };
+  const bunny = () => group(
+    at(sph(0.42, P.bunny), 0, 0.42, 0, 0, 0, 0), at(sph(0.3, P.bunny), 0.3, 0.78, 0),
+    at(cap(0.08, 0.42, P.bunny), 0.28, 1.25, 0.1, 0.2, 0, 0.1), at(cap(0.08, 0.42, P.bunny), 0.24, 1.25, -0.1, -0.2, 0, -0.1),
+    at(sph(0.06, P.pink, { noOutline: true }), 0.58, 0.8, 0), at(sph(0.05, P.dark, { noOutline: true }), 0.48, 0.88, 0.18), at(sph(0.05, P.dark, { noOutline: true }), 0.48, 0.88, -0.18),
+    at(sph(0.14, P.white), -0.42, 0.45, 0));
+  const tree = (s = 1, seed = 1) => {
+    const r = rng(seed);
+    return group(at(cyl(0.18, 0.26, 1.6, P.trunk), 0, 0.8, 0, 0, 0, 0, 1),
+      at(sph(1.0, r() < 0.5 ? P.leaf : P.leaf2), 0, 2.2, 0), at(sph(0.72, P.leaf), 0.6, 1.85, 0.3), at(sph(0.65, P.leaf2), -0.55, 1.95, -0.2), at(sph(0.55, P.leaf2), 0.1, 2.85, 0.1));
+  };
+  const house = () => {
+    const g = group(at(rbox(3, 2.2, 2.6, 0.18, P.wall), 0, 1.1, 0), at(mesh(new THREE.ConeGeometry(2.45, 1.6, 4), P.roof), 0, 3.0, 0, 0, Math.PI / 4, 0));
+    g.add(at(rbox(0.7, 1.2, 0.12, 0.06, P.trunk), 0.6, 0.62, 1.32));
+    g.add(at(rbox(0.7, 0.6, 0.1, 0.06, '#9fd8ff', { noOutline: false }), -0.75, 1.3, 1.32));
+    g.userData.window = g.children[g.children.length - 1];
+    return g;
+  };
+  const flower = (col) => group(at(cyl(0.03, 0.03, 0.5, P.leaf, { noOutline: true }), 0, 0.25, 0), at(sph(0.14, col, { ol: 0.12 }), 0, 0.55, 0), at(sph(0.07, '#ffe9a0', { noOutline: true }), 0.06, 0.62, 0.06));
+  const coin = () => at(cyl(0.32, 0.32, 0.1, P.coin, { emissive: P.coin, ei: 0.15 }), 0, 0, 0, Math.PI / 2, 0, 0);
+  const cloud = () => group(at(sph(0.9, P.cloud, { cast: false }), 0, 0, 0), at(sph(0.7, P.cloud, { cast: false }), 0.9, -0.15, 0), at(sph(0.65, P.cloud, { cast: false }), -0.85, -0.2, 0));
+  const lantern = () => {
+    const g = group(at(cyl(0.05, 0.05, 1.8, P.dark), 0, 0.9, 0), at(rbox(0.36, 0.46, 0.36, 0.08, '#ffd27a', { emissive: '#ffb347', ei: 2.2 }), 0, 1.95, 0));
+    const pl = new THREE.PointLight('#ffb347', 0, 9, 1.6); pl.position.set(0, 1.95, 0); g.add(pl); g.userData.light = pl; return g;
+  };
+  return { S, P, mesh, sph, cap, cone, cyl, rbox, at, group, fox, bunny, tree, house, flower, coin, cloud, lantern };
+}
+
+function lights(scene, night) {
+  const hemi = new THREE.HemisphereLight(night ? '#4a5aa8' : '#ffffff', night ? '#1a1430' : '#8a9a70', night ? 0.55 : 1.15); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(night ? '#9fb4ff' : '#fff2dc', night ? 0.55 : 2.4); sun.position.set(night ? -6 : -8, 14, 10); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16 }); sun.shadow.bias = -0.0006; sun.shadow.radius = 6;
+  scene.add(sun);
+}
+
+// ----- scene 1: a side-view platformer -----
+function sideScene(style) {
+  const K = makeKit(style), scene = new THREE.Scene();
+  scene.background = skyTex(K.S.sky);
+  lights(scene, false);
+  // distant rounded hills
+  [[-12, -14, -30, 12, '#c6ead0'], [6, -16, -34, 15, '#b6e2c0'], [18, -13, -28, 10, '#c6ead0']].forEach(([x, y, z, r, c]) => scene.add(K.at(K.sph(r, style === 'toon' ? '#8fe07a' : c, { cast: false, noOutline: true }), x, y, z)));
+  // platforms with grassy tops
+  const plat = (x, y, w) => { scene.add(K.at(K.rbox(w, 1.2, 2.4, 0.3, K.P.dirt), x, y - 0.6, 0)); scene.add(K.at(K.rbox(w + 0.25, 0.45, 2.6, 0.2, K.P.grass), x, y - 0.05, 0)); };
+  plat(-2.5, -3, 7); plat(5.2, -0.6, 3.6); plat(1.5, 3.2, 3); plat(-4.5, 6.4, 3.2);
+  const f = K.fox(); K.at(f, -2.8, -2.8, 0.2, 0, 0.12, 0, 1); scene.add(f);
+  [[2.3, -1.1], [3.4, 0.5], [4.6, 1.5], [5.8, 1.2]].forEach(([x, y]) => { const c = K.coin(); c.position.set(x, y, 0.2); c.rotation.z = 0.3; scene.add(c); });
+  scene.add(K.at(K.tree(0.8, 3), -5.6, -2.8, -0.6, 0, 0, 0, 0.8));
+  scene.add(K.at(K.bunny(), 1.1, 3.4, 0.4, 0, -0.3, 0, 0.9));
+  [[-3, 9.6, -3], [4.5, 8.5, -4], [-6.5, 2, -5]].forEach(([x, y, z]) => scene.add(K.at(K.cloud(), x, y, z)));
+  ['#ff9fb8', '#ffd86a'].forEach((c, i) => scene.add(K.at(K.flower(K.P.flower[i]), -0.4 + i * 0.6, -2.8, 0.8)));
+  const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 200); cam.position.set(0.3, 2.2, 46); cam.lookAt(0.3, 2.0, 0);
+  return { scene, cam };
+}
+
+// ----- scene 2 (top view by day) and scene 3 (the same garden at night) -----
+function gardenScene(style, night) {
+  const K = makeKit(style), P = K.P, scene = new THREE.Scene();
+  scene.background = night ? skyTex([[0, '#0b1030'], [1, '#2a2350']]) : skyTex(K.S.sky);
+  lights(scene, night);
+  const ground = K.mesh(new THREE.CylinderGeometry(14, 14, 0.6, 48), night ? '#3e6a58' : P.grass, { noOutline: true }); ground.position.y = -0.3; ground.castShadow = false; scene.add(ground);
+  const path = K.mesh(new THREE.CylinderGeometry(1.4, 1.4, 0.06, 32), P.dirt, { noOutline: true, cast: false });
+  [[0, 3], [0.8, 5.2], [1.2, 7.4], [0.4, 1]].forEach(([x, z]) => { const p = path.clone(); p.position.set(x, 0.02, z); p.scale.set(1, 1, 0.8); scene.add(p); });
+  const h = K.house(); K.at(h, -1, 0, -4, 0, 0.15, 0); scene.add(h);
+  if (night) { h.userData.window.material = K.S.mat('#ffd27a', { emissive: '#ffb347', ei: 2.5 }); }
+  const pond = K.mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.08, 40), P.water, { noOutline: true, cast: false }); pond.position.set(5.2, 0.03, 2.6); pond.scale.set(1, 1, 0.7); scene.add(pond);
+  [[-6, -5, 1], [6, -6, 2], [-7, 2, 3], [7.5, -1.5, 4], [-4.5, 7, 5], [8, 6.5, 6]].forEach(([x, z, s]) => scene.add(K.at(K.tree(1, s), x, 0, z)));
+  // a fence along the back
+  for (let i = 0; i < 9; i++) { scene.add(K.at(K.rbox(0.2, 1, 0.2, 0.06, P.fence), -4 + i * 1, 0.5, -7.2)); }
+  scene.add(K.at(K.rbox(8.4, 0.16, 0.12, 0.05, P.fence), 0, 0.75, -7.2));
+  const r = rng(9);
+  for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = 3 + r() * 9; const x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.hypot(x - 5.2, z - 2.6) < 2.8 || Math.abs(x + 1) < 2.5 && z < -1) continue; scene.add(K.at(K.flower(P.flower[i % 3]), x, 0, z)); }
+  [[3, 0.2, 4.6], [-6, 0.2, -1], [2.2, 0.2, -5.5]].forEach(([x, y, z]) => scene.add(K.at(K.sph(0.5, P.rock), x, y, z, 0, 0, 0, 1)));
+  const f = K.fox(); K.at(f, 1, 0, 2.4, 0, -0.7, 0, 0.9); scene.add(f);
+  scene.add(K.at(K.bunny(), -3, 0, 2.5, 0, 0.6, 0)); scene.add(K.at(K.bunny(), -2.2, 0, 4.2, 0, 1.4, 0, 0.8)); scene.add(K.at(K.bunny(), 3.8, 0, -1.5, 0, 2.4, 0, 0.85));
+  if (night) {
+    [[2.5, 1], [-3.5, 5.5], [4.5, -3]].forEach(([x, z]) => { const l = K.lantern(); l.position.set(x, 0, z); l.userData.light.intensity = 26; scene.add(l); });
+    const rr = rng(4);
+    for (let i = 0; i < 26; i++) { const ff = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshBasicMaterial({ color: '#fff3a0' })); ff.position.set((rr() - 0.5) * 18, 0.6 + rr() * 2.5, (rr() - 0.5) * 16); scene.add(ff);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffe680', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(0.7); halo.position.copy(ff.position); scene.add(halo); }
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 24), new THREE.MeshBasicMaterial({ color: '#fff4d6' })); moon.position.set(-9, 13, -22); scene.add(moon);
+    const owl = K.group(K.at(K.sph(0.5, '#8a6a5a'), 0, 0, 0), K.at(K.sph(0.36, '#8a6a5a'), 0, 0.6, 0), K.at(K.sph(0.13, '#ffe680', { emissive: '#ffcc33', ei: 2, noOutline: true }), 0.14, 0.66, 0.3), K.at(K.sph(0.13, '#ffe680', { emissive: '#ffcc33', ei: 2, noOutline: true }), -0.14, 0.66, 0.3));
+    K.at(owl, -6.2, 3.6, 1.2, 0, 0.7, 0); scene.add(owl);
+  }
+  const cam = new THREE.PerspectiveCamera(night ? 34 : 30, W / H, 0.1, 200);
+  if (night) { cam.position.set(9, 7, 17); cam.lookAt(-0.5, 1.4, 0.5); } else { cam.position.set(0.5, 25, 12); cam.lookAt(0.5, 0, 0.8); }
+  return { scene, cam };
+}
+let _glow;
+function glowTex() {
+  if (_glow) return _glow;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.3, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64); _glow = new THREE.CanvasTexture(c); return _glow;
+}
+
+const shots = {};
+for (const style of ['clay', 'toon']) {
+  for (const [name, build] of [['side', () => sideScene(style)], ['top', () => gardenScene(style, false)], ['night', () => gardenScene(style, true)]]) {
+    const { scene, cam } = build();
+    renderer.toneMapping = style === 'toon' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+    renderer.render(scene, cam);
+    shots[`${style}-${name}`] = canvas.toDataURL('image/png');
+  }
+}
+window.SHOTS = shots;
+document.body.dataset.ready = '1';
+</script>
+</body>
+</html>

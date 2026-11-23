@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Universal styles — 2D</title>
+<style>body { margin: 0; background: #111; }</style>
+</head>
+<body>
+<script>
+'use strict';
+const W = 300, H = 533, DPR = 2;
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function hash(x, s) { const v = Math.sin(x * 127.1 + s * 311.7) * 43758.5453; return v - Math.floor(v); }
+
+// ---------- geometry: every shape is a list of points, so each style can render it its own way ----------
+const E = (cx, cy, rx, ry, rot = 0, n = 44) => Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2; const x = Math.cos(a) * rx, y = Math.sin(a) * ry; return [cx + x * Math.cos(rot) - y * Math.sin(rot), cy + x * Math.sin(rot) + y * Math.cos(rot)]; });
+const RR = (x, y, w, h, r) => { const p = []; const c = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]]; c.forEach(([cx, cy, a0]) => { for (let i = 0; i <= 6; i++) { const a = a0 + (i / 6) * (Math.PI / 2); p.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } }); return p; };
+const CAP = (x1, y1, x2, y2, r) => { const a = Math.atan2(y2 - y1, x2 - x1), p = []; for (let i = 0; i <= 10; i++) { const t = a + Math.PI / 2 + (i / 10) * Math.PI; p.push([x1 + Math.cos(t) * r, y1 + Math.sin(t) * r]); } for (let i = 0; i <= 10; i++) { const t = a - Math.PI / 2 + (i / 10) * Math.PI; p.push([x2 + Math.cos(t) * r, y2 + Math.sin(t) * r]); } return p; };
+const TF = (pts, x, y, s, rot = 0, flip = 1) => pts.map(([px, py]) => { const X = px * s * flip, Y = py * s; return [x + X * Math.cos(rot) - Y * Math.sin(rot), y + X * Math.sin(rot) + Y * Math.cos(rot)]; });
+
+// ---------- renderers ----------
+function shade(c, k) { const n = parseInt(c.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; const f = (v, t) => Math.round(k < 0 ? v * (1 + k) + 30 * -k * (t === 'b' ? 1 : 0.3) : v + (255 - v) * k); return `rgb(${f(r, 'r')},${f(g, 'g')},${f(b, 'b')})`; }
+function makeRenderer(ctx, style) {
+  const path = (pts, jit = 0, seed = 1) => { ctx.beginPath(); pts.forEach(([x, y], i) => { const jx = jit ? (hash(i + x, seed) - 0.5) * jit : 0, jy = jit ? (hash(i + y, seed + 3) - 0.5) * jit : 0; i ? ctx.lineTo(x + jx, y + jy) : ctx.moveTo(x + jx, y + jy); }); ctx.closePath(); };
+  // halftone dot pattern for the ink style's shadows
+  const dots = (() => { const c = document.createElement('canvas'); c.width = c.height = 6 * DPR; const x = c.getContext('2d'); x.scale(DPR, DPR); x.fillStyle = 'rgba(40,24,30,0.55)'; x.beginPath(); x.arc(1.5, 1.5, 1.05, 0, 7); x.arc(4.5, 4.5, 1.05, 0, 7); x.fill(); return ctx.createPattern(c, 'repeat'); })();
+  if (dots.setTransform) dots.setTransform(new DOMMatrix().scale(1 / DPR));
+  const R = {
+    style,
+    bg(stops, y0 = 0, y1 = H) { const g = ctx.createLinearGradient(0, y0, 0, y1); stops.forEach(([t, c]) => g.addColorStop(t, c)); ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0); },
+    shape(pts, col, o = {}) {
+      const d = o.d ?? 3, sh = o.shade !== false, line = o.line !== false;
+      if (o.drop) { ctx.save(); ctx.translate(o.drop[0], o.drop[1]); path(pts); ctx.fillStyle = o.dropCol || 'rgba(20,20,60,0.22)'; ctx.fill(); ctx.restore(); }
+      if (style === 'flat') {
+        path(pts); ctx.fillStyle = sh ? shade(col, -0.22) : col; ctx.fill();
+        if (sh) { ctx.save(); path(pts); ctx.clip(); ctx.translate(-d, -d); path(pts); ctx.fillStyle = col; ctx.fill();
+          ctx.translate(-d * 1.4, -d * 1.4); ctx.globalAlpha = 0.0; ctx.restore(); }
+        if (o.glint) { ctx.save(); path(pts); ctx.clip(); const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); const x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, h = Math.max(...ys) - y0; ctx.beginPath(); ctx.ellipse(x0 + w * 0.3, y0 + h * 0.25, w * 0.16, h * 0.1, -0.5, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill(); ctx.restore(); }
+      } else {
+        path(pts); ctx.fillStyle = col; ctx.fill();
+        if (sh) { ctx.save(); path(pts); ctx.clip(); ctx.fillStyle = dots; ctx.fillRect(0, 0, W, H); ctx.translate(-d, -d); path(pts); ctx.fillStyle = col; ctx.fill(); ctx.restore(); }
+        if (line) { path(pts, 0.9, pts.length); ctx.lineWidth = o.lw || 1.9; ctx.strokeStyle = '#2a1a22'; ctx.lineJoin = 'round'; ctx.stroke(); }
+      }
+    },
+    glow(x, y, r, col, a = 0.8) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col.replace('ALPHA', a)); g.addColorStop(1, col.replace('ALPHA', 0)); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore(); },
+    finish() {
+      if (style !== 'ink') return;
+      // paper grain over everything
+      const r = rng(5); ctx.save(); ctx.globalAlpha = 0.07;
+      for (let i = 0; i < 2600; i++) { ctx.fillStyle = r() < 0.5 ? '#ffffff' : '#3a2a20'; ctx.fillRect(r() * W, r() * H, 1, 1); }
+      ctx.restore();
+    },
+    ui(score, night) {
+      if (style === 'flat') {
+        ctx.save(); ctx.fillStyle = night ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.roundRect(14, 16, 82, 32, 16); ctx.fill();
+        ctx.fillStyle = '#ffb400'; ctx.beginPath(); ctx.arc(32, 32, 8, 0, 7); ctx.fill();
+        ctx.font = '800 18px Inter'; ctx.fillStyle = night ? '#ffffff' : '#20304a'; ctx.fillText(String(score), 48, 39); ctx.restore();
+      } else {
+        ctx.save(); ctx.translate(14, 14); ctx.rotate(-0.04);
+        R.shape(RR(0, 0, 84, 34, 6), night ? '#3a3050' : '#fff3d6', { shade: false, lw: 2.2 });
+        ctx.font = '700 20px "Comic Relief"'; ctx.fillStyle = night ? '#ffe9b0' : '#2a1a22'; ctx.fillText(`★ ${score}`, 12, 24); ctx.restore();
+      }
+    },
+  };
+  return R;
+}
+
+// ---------- characters and props, drawn from points ----------
+function foxSide(R, P, x, y, s, flip = 1) { // y = ground line
+  const t = (pts) => TF(pts, x, y, s, 0, flip);
+  R.shape(t(CAP(-16, -16, -12, -1, 3.2)), P.dark, { shade: false });
+  R.shape(t(CAP(20, -16, 24, -1, 3)), P.dark, { shade: false });
+  R.shape(t(E(-40, -30, 18, 8, -0.5)), P.fox, { d: 2.5 }); // tail
+  R.shape(t(E(-52, -38, 7, 5, -0.5)), P.white, { d: 1.5 });
+  R.shape(t(E(0, -24, 27, 11.5)), P.fox, { d: 3, glint: true }); // body
+  R.shape(t([[-14, -16], [16, -17], [22, -12], [-12, -13]]), P.white, { shade: false, line: false });
+  R.shape(t(CAP(-22, -18, -26, -1, 3.6)), P.dark, { shade: false });
+  R.shape(t(CAP(16, -18, 13, -1, 3.4)), P.dark, { shade: false });
+  R.shape(t([[30, -44], [33, -58], [40, -46]]), P.fox, { d: 1.5 }); // ears
+  R.shape(t([[38, -46], [44, -59], [47, -44]]), P.fox, { d: 1.5 });
+  R.shape(t(E(37, -38, 11, 10)), P.fox, { d: 2, glint: true }); // head
+  R.shape(t([[40, -42], [58, -35], [55, -31], [40, -30]]), P.white, { d: 1.5 }); // snout
+  R.shape(t(E(57, -35, 2.4, 2)), P.dark, { shade: false, line: false });
+  R.shape(t(E(39, -41, 1.8, 2.2)), P.dark, { shade: false, line: false });
+}
+function foxTop(R, P, x, y, s, rot) {
+  const t = (pts) => TF(pts, x, y, s, rot);
+  [[-8, -9], [8, -9], [-8, 10], [8, 10]].forEach(([lx, ly]) => R.shape(t(E(lx, ly, 3, 4)), P.dark, { shade: false }));
+  R.shape(t(E(0, 26, 7, 14)), P.fox, { d: 2 }); R.shape(t(E(0, 37, 4, 5)), P.white, { d: 1 });
+  R.shape(t(E(0, 2, 9, 17)), P.fox, { d: 3, glint: true, drop: [5, 5], dropCol: 'rgba(20,40,20,0.25)' });
+  R.shape(t([[-7, -18], [-11, -28], [-2, -21]]), P.fox, { d: 1 }); R.shape(t([[7, -18], [11, -28], [2, -21]]), P.fox, { d: 1 });
+  R.shape(t(E(0, -17, 8, 8)), P.fox, { d: 2 });
+  R.shape(t([[-4, -22], [0, -32], [4, -22]]), P.white, { d: 1 });
+  R.shape(t(E(0, -32, 1.6, 1.6)), P.dark, { shade: false, line: false });
+}
+function bunnySide(R, P, x, y, s) {
+  const t = (pts) => TF(pts, x, y, s);
+  R.shape(t(E(-11, -10, 5, 4)), P.white, { d: 1 });
+  R.shape(t(E(0, -11, 12, 10)), P.bunny, { d: 2.5 });
+  R.shape(t(E(10, -21, 4, 12, 0.25)), P.bunny, { d: 1.5 }); R.shape(t(E(4, -22, 4, 12, -0.15)), P.bunny, { d: 1.5 });
+  R.shape(t(E(10, -16, 8, 7)), P.bunny, { d: 2 });
+  R.shape(t(E(13, -17, 1.5, 1.7)), P.dark, { shade: false, line: false }); R.shape(t(E(17.5, -14, 1.4, 1.1)), P.pink, { shade: false, line: false });
+}
+function bunnyTop(R, P, x, y, s, rot) {
+  const t = (pts) => TF(pts, x, y, s, rot);
+  R.shape(t(E(0, 4, 8, 10)), P.bunny, { d: 2, drop: [4, 4], dropCol: 'rgba(20,40,20,0.22)' });
+  R.shape(t(E(-3, -14, 2.5, 7, -0.2)), P.bunny, { d: 1 }); R.shape(t(E(3, -14, 2.5, 7, 0.2)), P.bunny, { d: 1 });
+  R.shape(t(E(0, -7, 5.5, 5)), P.bunny, { d: 1.5 }); R.shape(t(E(0, 14, 3, 3)), P.white, { d: 1 });
+}
+function treeSide(R, P, x, y, s) {
+  const t = (pts) => TF(pts, x, y, s);
+  R.shape(t(RR(-4, -40, 8, 40, 3)), P.trunk, { d: 2 });
+  [[-12, -50, 16], [12, -52, 17], [0, -66, 20], [0, -46, 15]].forEach(([cx, cy, r], i) => R.shape(t(E(cx, cy, r, r)), i % 2 ? P.leaf : P.leaf2, { d: 4 }));
+}
+function treeTop(R, P, x, y, r, seed) {
+  R.shape(E(x + r * 0.5, y + r * 0.5, r * 1.05, r), 'rgba(0,0,0,0)', { shade: false, line: false, drop: [0, 0], dropCol: 'rgba(20,40,30,0.3)' });
+  const rr = rng(seed);
+  R.shape(E(x, y, r, r), P.leaf, { d: r * 0.25 });
+  for (let i = 0; i < 4; i++) { const a = rr() * 6.28, d = rr() * r * 0.45, k = r * (0.3 + rr() * 0.2); R.shape(E(x + Math.cos(a) * d - r * 0.1, y + Math.sin(a) * d - r * 0.1, k, k), P.leaf2, { d: k * 0.3, line: false }); }
+}
+function flowers(R, P, x, y, n, seed) { const r = rng(seed); for (let i = 0; i < n; i++) { const fx = x + (r() - 0.5) * 30, fy = y + (r() - 0.5) * 6; R.shape(E(fx, fy, 3, 3), P.flower[i % 3], { shade: false, lw: 1.2 }); } }
+
+// ---------- palettes ----------
+const PAL = {
+  flat: {
+    sky: [[0, '#4ab3f4'], [0.7, '#9fe0ff'], [1, '#d8f6ff']], hills: ['#64c9a8', '#45b393'],
+    grass: '#47c26a', grassTop: '#5ed877', dirt: '#e9a35a', fox: '#ff7d2e', white: '#ffffff', dark: '#24314d', bunny: '#f2f6ff', pink: '#ff7aa8',
+    leaf: '#22a35a', leaf2: '#3cc46e', trunk: '#9a5a3a', coin: '#ffc21a', roof: '#ff5a5f', roof2: '#e8434e', wall: '#fff2dd', water: '#2fb8ff', path: '#f6d59a', flower: ['#ff5a8a', '#ffd21a', '#9a7aff'], groundTop: '#5bd07a',
+    night: { sky: [[0, '#0a1440'], [0.7, '#1e2e78'], [1, '#3a3f8f']], hills: ['#1c2a6a', '#16225a'], ground: '#122046', wall: '#3a4a8a', roof: '#5a3a7a', fox: '#ff8a3a', leaf: '#163a5a', leaf2: '#1f4a6a', trunk: '#2a2a4a' },
+  },
+  ink: {
+    sky: [[0, '#f3d9a8'], [0.75, '#f7e6c4'], [1, '#fbefd6']], hills: ['#a8b884', '#8fa26c'],
+    grass: '#8aa65a', grassTop: '#a3bd68', dirt: '#c98a4e', fox: '#e0703a', white: '#fbf3e2', dark: '#2a1a22', bunny: '#f6eedd', pink: '#e88a9a',
+    leaf: '#5e8a4a', leaf2: '#7ea05a', trunk: '#7a4e34', coin: '#e8b32a', roof: '#c2483a', roof2: '#a83a30', wall: '#f3e2c0', water: '#6aa8c0', path: '#e8c890', flower: ['#d8506a', '#e8b32a', '#7a6ab8'], groundTop: '#9ab462',
+    night: { sky: [[0, '#1e2440'], [0.7, '#3a3a60'], [1, '#5a4a6a']], hills: ['#2e3452', '#262a44'], ground: '#232640', wall: '#6a6070', roof: '#6a3a40', fox: '#e0703a', leaf: '#2e3e44', leaf2: '#3a4a4e', trunk: '#3a3036' },
+  },
+};
+
+// ---------- the three test scenes ----------
+function sideDay(R, P) {
+  R.bg(P.sky);
+  R.glow(232, 92, 70, 'rgba(255,250,210,ALPHA)', 0.9);
+  R.shape(E(232, 92, 24, 24), '#fff3b8', { shade: false, line: R.style === 'ink' });
+  const cloud = (x, y, s) => { const pts = []; const blob = (cx, cy, r) => E(cx, cy, r, r, 0, 24);
+    // union of circles, sampled as one outline so each style outlines it once
+    const parts = [[x - 14 * s, y + 2 * s, 11 * s], [x, y - 6 * s, 15 * s], [x + 15 * s, y + 1 * s, 12 * s], [x + 2 * s, y + 6 * s, 12 * s]];
+    for (let i = 0; i < 72; i++) { const a = (i / 72) * Math.PI * 2; let best = 0; parts.forEach(([cx, cy, r]) => { const dx = Math.cos(a), dy = Math.sin(a); const ox = cx - x, oy = cy - y; const b = ox * dx + oy * dy, c = ox * ox + oy * oy - r * r, disc = b * b - c; if (disc >= 0) best = Math.max(best, b + Math.sqrt(disc)); }); pts.push([x + Math.cos(a) * best, y + Math.sin(a) * best * (Math.sin(a) > 0 ? 0.6 : 1)]); }
+    R.shape(pts, '#ffffff', { d: 3, drop: [0, 3], dropCol: 'rgba(40,80,140,0.12)' }); };
+  cloud(60, 70, 1.2); cloud(250, 160, 0.9); cloud(140, 120, 0.7);
+  R.shape(E(40, 520, 190, 150), P.hills[0], { shade: false, line: false }); R.shape(E(290, 540, 170, 120), P.hills[1], { shade: false, line: false });
+  const plat = (x, y, w) => { R.shape(RR(x, y, w, 34, 8), P.dirt, { d: 4 }); R.shape(RR(x - 4, y - 6, w + 8, 14, 7), P.grassTop, { d: 3 }); };
+  plat(14, 400, 180); plat(196, 310, 90); plat(70, 222, 96);
+  treeSide(R, P, 40, 396, 1);
+  foxSide(R, P, 112, 396, 0.95);
+  bunnySide(R, P, 120, 218, 1);
+  [[200, 360], [222, 340], [244, 352], [162, 280]].forEach(([x, y]) => R.shape(E(x, y, 7, 7), P.coin, { d: 2, glint: true }));
+  flowers(R, P, 168, 394, 4, 3);
+  R.ui(12, false);
+}
+function topDay(R, P) {
+  R.bg([[0, P.grass], [1, P.grass]]);
+  const r = rng(7);
+  for (let i = 0; i < 160; i++) { const x = r() * W, y = r() * H; R.shape(E(x, y, 2.2, 1.2), P.grassTop, { shade: false, line: false }); }
+  // winding path
+  for (let i = 0; i < 9; i++) R.shape(E(150 + Math.sin(i * 0.8) * 30, 520 - i * 46, 34, 22), P.path, { shade: false, line: R.style === 'ink', lw: 1.3 });
+  // house from above: two roof halves and a chimney
+  R.shape(RR(56, 50, 120, 96, 4), P.wall, { shade: false, drop: [10, 10], dropCol: 'rgba(20,40,20,0.3)' });
+  R.shape([[50, 44], [182, 44], [182, 98], [50, 98]], P.roof, { d: 0, shade: false }); R.shape([[50, 98], [182, 98], [182, 152], [50, 152]], P.roof2, { shade: false });
+  R.shape(RR(140, 60, 16, 18, 2), P.trunk, { d: 2 });
+  R.shape(E(232, 300, 50, 34), P.water, { d: 4, glint: true });
+  treeTop(R, P, 254, 70, 32, 1); treeTop(R, P, 30, 230, 26, 2); treeTop(R, P, 268, 440, 30, 3); treeTop(R, P, 30, 470, 22, 4);
+  foxTop(R, P, 150, 330, 1.25, -0.6);
+  bunnyTop(R, P, 80, 330, 1.2, 0.5); bunnyTop(R, P, 100, 390, 1.0, -0.3); bunnyTop(R, P, 215, 200, 1.1, 2.2);
+  flowers(R, P, 60, 180, 6, 2); flowers(R, P, 210, 380, 5, 5);
+  for (let i = 0; i < 8; i++) R.shape(RR(56 + i * 16, 168, 5, 14, 2), P.dirt, { d: 1.5 });
+  R.ui(12, false);
+}
+function nightSide(R, P0) {
+  const P = { ...P0, ...P0.night };
+  R.bg(P.sky);
+  const r = rng(11);
+  for (let i = 0; i < 70; i++) { const x = r() * W, y = r() * 300; R.shape(E(x, y, 0.8, 0.8, 0, 6), '#ffffff', { shade: false, line: false }); }
+  R.glow(78, 110, 90, 'rgba(200,210,255,ALPHA)', 0.35);
+  R.shape(E(78, 110, 30, 30), '#f6f0d8', { d: 6, line: R.style === 'ink' });
+  R.shape(E(60, 520, 220, 170), P.hills[0], { shade: false, line: false }); R.shape(E(300, 500, 140, 110), P.hills[1], { shade: false, line: false });
+  R.shape([[0, 440], [300, 430], [300, 533], [0, 533]], P.ground, { shade: false, line: R.style === 'ink' });
+  // cabin with a lit window
+  R.shape(RR(150, 330, 120, 104, 4), P.wall, { d: 6 });
+  R.shape([[140, 336], [210, 282], [280, 336]], P.roof, { d: 5 });
+  R.glow(232, 370, 60, 'rgba(255,190,90,ALPHA)', 0.55);
+  R.shape(RR(216, 354, 34, 30, 3), '#ffd06a', { shade: false });
+  R.shape(RR(170, 376, 30, 58, 3), P.trunk, { d: 3 });
+  // tree with an owl
+  R.shape(RR(24, 250, 14, 190, 5), P.trunk, { d: 3 });
+  R.shape(CAP(36, 300, 96, 286, 5), P.trunk, { d: 2 });
+  [[10, 230, 40], [46, 214, 36], [20, 196, 30]].forEach(([x, y, rr]) => R.shape(E(x, y, rr, rr * 0.9), P.leaf, { d: 6 }));
+  R.shape(E(84, 270, 11, 14), '#8a6a7a', { d: 3 }); R.shape(E(84, 256, 9, 8), '#8a6a7a', { d: 2 });
+  [[80, 256], [88, 256]].forEach(([x, y]) => { R.glow(x, y, 8, 'rgba(255,220,90,ALPHA)', 0.9); R.shape(E(x, y, 2.6, 2.6), '#ffe27a', { shade: false, line: false }); });
+  // lantern on a post
+  R.shape(RR(118, 360, 4, 80, 2), '#2a2a40', { shade: false });
+  R.glow(120, 356, 70, 'rgba(255,200,110,ALPHA)', 0.6);
+  R.shape(RR(111, 344, 18, 22, 4), '#ffd27a', { shade: false });
+  foxSide(R, P, 72, 438, 0.95);
+  for (let i = 0; i < 9; i++) { const x = 20 + r() * 260, y = 380 + r() * 130; R.glow(x, y, 8, 'rgba(255,240,150,ALPHA)', 0.75); R.shape(E(x, y, 1.2, 1.2, 0, 8), '#fff6c0', { shade: false, line: false }); }
+  R.ui(12, true);
+}
+
+const SHOTS = {};
+for (const style of ['flat', 'ink']) {
+  for (const [name, fn] of [['side', sideDay], ['top', topDay], ['night', nightSide]]) {
+    const c = document.createElement('canvas'); c.width = W * DPR; c.height = H * DPR;
+    const ctx = c.getContext('2d'); ctx.scale(DPR, DPR);
+    const R = makeRenderer(ctx, style);
+    fn(R, PAL[style]); R.finish();
+    SHOTS[`${style}-${name}`] = c.toDataURL('image/png');
+  }
+}
+window.SHOTS = SHOTS;
+document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
