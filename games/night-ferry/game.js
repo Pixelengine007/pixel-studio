@@ -18,13 +18,19 @@
 
   // sounds (synthesized, original)
   S.defineSfx('plip', [{ type: 'sine', f0: 880, f1: 1320, at: 0, dur: 0.08, vol: 0.12 }]);
-  S.defineSfx('splash', [{ type: 'noise', at: 0, dur: 0.4, vol: 0.22 }, { type: 'triangle', f0: 180, f1: 70, at: 0, dur: 0.25, vol: 0.2 }]);
+  S.defineSfx('splash', [{ type: 'noise', at: 0, dur: 0.4, vol: 0.15 }, { type: 'triangle', f0: 180, f1: 70, at: 0, dur: 0.25, vol: 0.2 }]);
   S.defineSfx('climb', [{ type: 'sine', f0: 520, f1: 980, at: 0, dur: 0.12, vol: 0.12 }, { type: 'sine', f0: 980, f1: 1240, at: 0.1, dur: 0.08, vol: 0.1 }]);
   S.defineSfx('rumble', [{ type: 'sawtooth', f0: 58, f1: 42, at: 0, dur: 1.6, vol: 0.12 }, { type: 'noise', at: 0, dur: 1.2, vol: 0.05 }]);
-  S.defineSfx('gulp', [{ type: 'triangle', f0: 220, f1: 50, at: 0, dur: 0.5, vol: 0.3 }, { type: 'noise', at: 0.05, dur: 0.3, vol: 0.12 }]);
+  S.defineSfx('gulp', [{ type: 'triangle', f0: 220, f1: 50, at: 0, dur: 0.5, vol: 0.22 }, { type: 'noise', at: 0.05, dur: 0.3, vol: 0.12 }]);
   S.defineSfx('creak', [{ type: 'square', f0: 170, f1: 130, at: 0, dur: 0.09, vol: 0.04 }]);
   S.defineSfx('fish', [{ type: 'noise', at: 0, dur: 0.12, vol: 0.08 }, { type: 'sine', f0: 600, f1: 300, at: 0, dur: 0.1, vol: 0.06 }]);
   S.defineSfx('chime', [523, 659, 784, 1047].map((f, i) => ({ type: 'sine', f0: f, f1: f, at: i * 0.12, dur: 0.4, vol: 0.12 })));
+  S.defineSfx('note', [{ type: 'sine', f0: 440, f1: 440, at: 0, dur: 0.9, vol: 0.075 }, { type: 'triangle', f0: 880, f1: 880, at: 0, dur: 0.35, vol: 0.012 }]);
+  S.defineSfx('bass', [{ type: 'triangle', f0: 110, f1: 110, at: 0, dur: 1.6, vol: 0.085 }]);
+  S.defineSfx('lap', [{ type: 'noise', at: 0, dur: 0.35, vol: 0.018 }, { type: 'sine', f0: 140, f1: 90, at: 0, dur: 0.3, vol: 0.02 }]);
+  S.defineSfx('cricket', [0, 0.05, 0.1].map((at) => ({ type: 'square', f0: 4200, f1: 4000, at, dur: 0.025, vol: 0.006 })));
+  S.defineSfx('thump', [{ type: 'sine', f0: 90, f1: 50, at: 0, dur: 0.14, vol: 0.18 }, { type: 'sine', f0: 80, f1: 45, at: 0.18, dur: 0.12, vol: 0.12 }]);
+  S.defineSfx('sparkle', [1568, 2093].map((f, i) => ({ type: 'sine', f0: f, f1: f, at: i * 0.06, dur: 0.18, vol: 0.04 })));
   S.defineSfx('lose', [440, 392, 330, 262].map((f, i) => ({ type: 'triangle', f0: f, f1: f, at: i * 0.18, dur: 0.24, vol: 0.16 })));
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -43,7 +49,7 @@
       this.rand = S.rng(S.seed);
       this.t = 0; this.playT = 0; this.dist = 0;
       this.theta = 0; this.thetaV = 0;
-      this.uw = 0; this.lantern = false; this.wrenStep = 0;
+      this.uw = 0; this.lantern = false; this.wrenStep = 0; this.face = 1; this.shake = 0; this.fx = S.rng(S.seed * 7 + 3); this.musicT = 0.5; this.musicStep = 0; this.lapT = 1; this.heartT = 0;
       this.spirits = SPIRITS.map((d, i) => ({ ...d, u: -0.62 + i * 0.31, state: 'deck', target: -0.62 + i * 0.31, timer: 1 + this.rand() * 2, panicT: 0, interest: 0, mood: 'calm', lean: 0, bob: this.rand() * 6, wx: 0, wy: 0, waterT: 0 }));
       this.lost = 0; this.delivered = 0;
       this.parts = []; this.ripples = []; this.popups = [];
@@ -113,7 +119,7 @@
         const lx = S.input.x / RES;
         const target = clamp((lx - BX) / DECK, -0.95, 0.95);
         const step = clamp(target - this.uw, -1.25 * dt, 1.25 * dt);
-        this.uw += step; this.wrenStep += Math.abs(step) * 9; this.toadV = step / Math.max(dt, 1e-4);
+        this.uw += step; this.wrenStep += Math.abs(step) * 9; this.toadV = step / Math.max(dt, 1e-4); if (Math.abs(this.toadV) > 0.05) this.face = Math.sign(this.toadV);
       }
       this.runEvents(dt);
       this.spirits.forEach((s) => this.updateSpirit(s, dt));
@@ -171,8 +177,8 @@
         s.wy = this.surf(s.wx) + 1 + Math.sin(s.bob * 2) * 1.2;
         s.mood = 'scared';
         const d = this.deep;
-        if ((d.phase === 'rise' || d.phase === 'hold') && Math.abs(s.wx - (BX + d.side * 120)) < 150 && s.waterT > 1.1) { s.state = 'grab'; s.waterT = 0; S.sfx('gulp'); this.popup(s.wx, s.wy - 26, 'GONE…'); }
-        else if (Math.abs(s.wx - ex) < 12 && Math.abs(this.theta) < 0.16) { s.state = 'deck'; s.u = side * 0.92; s.panicT = 0; s.interest = 0; S.sfx('climb', 1.1); this.splash(s.wx, this.surf(s.wx), 4); }
+        if ((d.phase === 'rise' || d.phase === 'hold') && Math.abs(s.wx - (BX + d.side * 120)) < 150 && s.waterT > 1.1) { s.state = 'grab'; s.waterT = 0; S.sfx('gulp'); this.shake = Math.max(this.shake, 3); this.popup(s.wx, s.wy - 26, 'GONE!'); }
+        else if (Math.abs(s.wx - ex) < 12 && Math.abs(this.theta) < 0.16) { s.state = 'deck'; s.u = side * 0.92; s.panicT = 0; s.interest = 0; S.sfx('climb', 1.1); this.splash(s.wx, this.surf(s.wx), 4); this.sparks(s.wx, s.wy - 10, this.spirits.indexOf(s), 10); S.sfx('sparkle'); }
         else if (s.wx < -50 || s.waterT > 9) { s.state = 'grab'; s.waterT = 0; }
       } else if (s.state === 'grab') {
         s.waterT += dt; s.wy += dt * 60; s.wx -= SPEED * dt;
@@ -183,7 +189,7 @@
     overboard(s) {
       const [x, y] = this.deckPoint(Math.sign(s.u) * 1.05);
       s.state = 'water'; s.wx = x + Math.sign(s.u) * 20; s.wy = y; s.waterT = 0;
-      this.splash(s.wx, this.surf(s.wx), 10); S.sfx('splash'); S.sfx('plip', 1.4);
+      this.splash(s.wx, this.surf(s.wx), 16); S.sfx('splash'); this.shake = Math.max(this.shake, 3); S.sfx('plip', 1.4);
       this.popup(s.wx, y - 30, `${s.name.toUpperCase()}!`);
     }
 
@@ -205,13 +211,18 @@
 
     updateDeep(dt) {
       const d = this.deep; d.t += dt;
-      if (d.phase === 'warn') { if (this.rand() < dt * 18) this.parts.push({ x: BX + d.side * (100 + this.rand() * 60), y: 600, vx: 0, vy: -60 - this.rand() * 40, life: 2.5, kind: 'bubble' }); if (d.t > 1.6) { d.phase = 'rise'; d.t = 0; this.thetaV += d.side * 0.5; } }
+      if (d.phase === 'warn') { if (this.fx() < dt * 18) this.parts.push({ x: BX + d.side * (100 + this.fx() * 60), y: 600, vx: 0, vy: -60 - this.rand() * 40, life: 2.5, kind: 'bubble' }); if (d.t > 1.6) { d.phase = 'rise'; d.t = 0; this.thetaV += d.side * 0.5; this.shake = Math.max(this.shake, 4); } }
       else if (d.phase === 'rise') { d.y += (470 - d.y) * Math.min(1, dt * 3); d.eye = Math.min(1, d.eye + dt * 1.5); if (d.t > 0.5 && !d.scared) { d.scared = true; this.spirits.forEach((s) => { if (s.state === 'deck' && this.rand() < s.fear) s.panicT = 1.6 + s.fear * 1.4; }); } if (d.t > 1.2) { d.phase = 'hold'; d.t = 0; } }
       else if (d.phase === 'hold') { if (d.t > 2.8) { d.phase = 'sink'; d.t = 0; } }
       else if (d.phase === 'sink') { d.y += 120 * dt; d.eye = Math.max(0, d.eye - dt * 1.5); if (d.t > 1.6) { d.phase = 'off'; d.scared = false; } }
     }
 
     ambient(dt) {
+      this.shake = Math.max(0, this.shake - dt * 10);
+      this.music(dt);
+      this.lapT -= dt; if (this.lapT <= 0) { this.lapT = 1.4 + this.fx() * 1.6; S.sfx(this.fx() < 0.25 ? 'cricket' : 'lap', 0.9 + this.fx() * 0.3); }
+      if (this.state === 'playing' && this.spirits.some((s) => s.state === 'deck' && (s.edgeT || 0) > 0)) { this.heartT -= dt; if (this.heartT <= 0) { S.sfx('thump'); this.heartT = 0.42; } } else this.heartT = 0;
+      this.parts.forEach((p) => { if (p.kind === 'spark') { p.vx *= 1 - dt * 2; p.vy += 30 * dt; } });
       this.parts = this.parts.filter((p) => { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.kind === 'drop') p.vy += 220 * dt; if (p.kind === 'bubble' && p.y < WATER + 4) { this.ripples.push({ x: p.x, y: WATER, r: 2, life: 1 }); return false; } return p.life > 0; });
       this.ripples = this.ripples.filter((r) => { r.life -= dt; r.r += dt * 14; r.x -= SPEED * dt * (this.state === 'playing' ? 1 : 0); return r.life > 0; });
       this.fireflies = this.fireflies.filter((f) => { f.life -= dt; f.ph += dt; return f.life > 0; });
@@ -219,8 +230,26 @@
       this.popups = this.popups.filter((p) => (p.life -= dt) > 0);
     }
 
+    sparks(x, y, col, n) {
+      for (let i = 0; i < n; i++) { const a = this.fx() * Math.PI * 2, v = 30 + this.fx() * 50; this.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: 0.6 + this.fx() * 0.4, kind: 'spark', col }); }
+    }
+
+    // an original lullaby in D major pentatonic (waltz time); it turns low and slow while the Deep One is up
+    music(dt) {
+      this.musicT -= dt; if (this.musicT > 0) return;
+      const tense = this.deep.phase !== 'off' && this.deep.phase !== 'sink';
+      const beat = tense ? 0.6 : 0.46; this.musicT += beat;
+      const n = this.musicStep++;
+      const D = 293.66, scale = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2];
+      if (tense) { if (n % 3 === 0) S.sfx('bass', [1, 16 / 15, 1, 6 / 5][(n / 3) % 4 | 0] * 0.66); if (n % 6 === 3) S.sfx('note', (D * [6 / 5, 16 / 15][(n / 6) % 2 | 0]) / 440 * 0.5); return; }
+      const melody = [5, 4, 3, -1, 4, 2, 3, -1, 1, 2, 3, 4, 2, -1, -1, -1, 5, 6, 5, -1, 4, 3, 2, -1, 3, 2, 1, 2, 0, -1, -1, -1];
+      const bass = [0, 3, 4, 0, 3, 1, 4, 0];
+      const m = melody[n % 32]; if (m >= 0) S.sfx('note', (D * scale[m]) / 440);
+      if (n % 3 === 0) S.sfx('bass', (D / 4 * scale[bass[(n / 12 | 0) % 8]] * 2) / 110 / 1);
+    }
+
     splash(x, y, n) {
-      for (let i = 0; i < n; i++) this.parts.push({ x, y, vx: (this.rand() - 0.5) * 70, vy: -50 - this.rand() * 70, life: 0.9, kind: 'drop' });
+      for (let i = 0; i < n; i++) this.parts.push({ x, y, vx: (this.fx() - 0.5) * 70, vy: -50 - this.fx() * 70, life: 0.9, kind: 'drop' });
       this.ripples.push({ x, y, r: 3, life: 1.2 });
     }
     popup(x, y, str) { this.popups.push({ x, y, str, life: 1.4 }); }
@@ -232,7 +261,7 @@
       const onboard = this.spirits.filter((s) => s.state === 'deck');
       if (this.arriveT > 0.8 && onboard.length && this.arriveT > 0.8 + (5 - onboard.length) * 0.01) {
         const next = onboard.reduce((a, b) => (a.u > b.u ? a : b));
-        if (!this.hopT || this.arriveT - this.hopT > 0.45) { this.hopT = this.arriveT; next.state = 'home'; next.homeT = 0; this.delivered += 1; S.sfx('plip', 1 + this.delivered * 0.12); }
+        if (!this.hopT || this.arriveT - this.hopT > 0.45) { this.hopT = this.arriveT; next.state = 'home'; next.homeT = 0; this.delivered += 1; S.sfx('plip', 1 + this.delivered * 0.12); S.sfx('sparkle', 1 + this.delivered * 0.1); }
       }
       this.spirits.forEach((s) => { if (s.state === 'home') s.homeT += dt; });
       const busy = this.spirits.some((s) => s.state === 'water' || s.state === 'grab');

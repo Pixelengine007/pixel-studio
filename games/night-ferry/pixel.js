@@ -192,14 +192,14 @@
       E(ex + 1, ey - br, 5, 4.6, 'white', (px, py, nx, ny) => (ny > 0.5 ? 3 : 5));
       const [px0, py0] = P(ex + 2, ey - br);
       b.rect(px0 - 1, py0 - 2, 3, 4, 'ink', 0, id); b.put(px0, py0 - 2, 'white', 5, id);
-      if (o.sleepy) for (let dx = -5; dx <= 6; dx++) for (let dy = -6; dy <= -1; dy++) { if (Math.hypot(dx / 6, dy / 5.6) <= 1) b.put(...P(ex + dx + 1, ey + dy - br + 1), 'toad', dy === -1 ? 2 : 3, id); }
+      if (o.sleepy || o.blink) for (let dx = -5; dx <= 6; dx++) for (let dy = -6; dy <= (o.blink ? 5 : -1); dy++) { if (Math.hypot(dx / 6, dy / 5.6) <= 1) b.put(...P(ex + dx + 1, ey + dy - br + 1), 'toad', dy === (o.blink ? 5 : -1) ? 2 : 3, id); }
       if (o.worried) { const [bx, by] = P(ex - 3, ey - 8 - br); b.line(bx, by + (ex < 0 ? 2 : 0), bx + 7, by + (ex < 0 ? 0 : 2), 'toad', 1, 1, id); }
     });
     // woven straw hat with a red band and a feather
     const hy = -60 - br;
     b.poly([P(-20, hy + 2), P(32, hy + 2), P(28, hy + 6), P(-16, hy + 6)], 'straw', (px, py) => (((px + py) & 3) === 0 ? 3 : py < P(0, hy + 4)[1] ? 4 : 2), id);
     E(6, hy - 4, 13, 8, 'straw', (px, py, nx, ny) => { if (ny > 0.55) return 1; const weave = ((px + py * 2) % 4) === 0; return weave ? 2 : ny < -0.4 ? 5 : nx > 0.3 ? 4 : 3; });
-    const [rbx, rby] = P(-6, hy - 1); b.rect(rbx, rby, 25, 3, 'red', (px, py) => (py === rby ? 4 : 3), id);
+    const [rb0, rby] = P(-6, hy - 1), [rb1] = P(19, hy - 1); b.rect(Math.min(rb0, rb1), rby, Math.abs(rb1 - rb0), 3, 'red', (px, py) => (py === rby ? 4 : 3), id);
     b.line(...P(18, hy - 2), ...P(27, hy - 12), 'gold', 4, 2, id);
     b.outline(id);
   }
@@ -321,12 +321,13 @@
       const shake = sp.mood === 'scared' || (sp.edgeT || 0) > 0 ? Math.round(Math.sin(t * 40)) : 0;
       const [x, y] = R(sp.u * 132 + shake + sp.lean * 8, -8 - sp.r * 0.85 + Math.round(Math.sin(sp.bob) * 1.5));
       spirit(b, x, y, sp.r, SPR[i], (sp.edgeT || 0) > 0 ? 'scared' : sp.mood, 10 + i, t, i * 1.7);
+      if ((sp.edgeT || 0) > 0 && Math.sin(t * 18) > -0.3) { const wy = y - sp.r - 22; b.rect(x - 3, wy - 1, 7, 14, 'ink', 0, 0, 1); b.rect(x - 1, wy, 3, 8, 'red', 5, 0, 1); b.rect(x - 1, wy + 10, 3, 2, 'red', 5, 0, 1); }
     });
     const tu = sc.uw * 132, moving = Math.abs(sc.toadV || 0) > 0.05, step = moving ? Math.sin(sc.wrenStep * 2) : 0;
     const worried = Math.abs(sc.theta) > 0.2, br = Math.round(Math.sin(t * 2.2));
-    const TP = (dx, dy) => R(tu + dx, -8 + dy - (moving ? Math.round(Math.abs(step) * 2) : 0));
-    toad(b, TP, 2, { step, breath: br, sleepy: !sc.lantern && !worried, lantern: sc.lantern, worried });
-    if (sc.lantern) { const [lx, ly] = TP(22, -42 - br); b.line(lx, ly, lx + 2, ly - 16, 'wood', 2, 2, 3); lantern(b, lx + 2, ly - 18, 3, 1); b.outline(3); }
+    const face = sc.face || 1, TP = (dx, dy) => R(tu + dx * face, -8 + dy - (moving ? Math.round(Math.abs(step) * 2) : 0));
+    toad(b, TP, 2, { step, breath: br, sleepy: !sc.lantern && !worried, lantern: sc.lantern, worried, blink: (t % 3.7) < 0.12 });
+    if (sc.lantern) { const [lx, ly] = TP(22, -42 - br); b.line(lx, ly, lx + 2 * face, ly - 16, 'wood', 2, 2, 3); lantern(b, lx + 2 * face, ly - 18, 3, 1); b.outline(3); }
     // hull: planks with seams, ribs, nails, a gunwale along the top, bow post and stern pole
     b.poly(HULL.map(([x, y]) => R(x, y)), 'plank', (px, py) => {
       const lx = (px - ox) * c + (py - oy) * s, ly = -(px - ox) * s + (py - oy) * c;
@@ -351,6 +352,7 @@
       if (sp.state === 'grab' && sp.waterT < 0.8) spirit(b, sp.wx, sp.wy + ex, sp.r * (1 - sp.waterT * 0.8), SPR[i], 'scared', 20 + i, t, i);
       if (sp.state === 'home') { const k = Math.min(1, sp.homeT / 0.6), x = 300 + k * (shoreX + 20 + i * 22 - 300), y = WL - 52 - Math.sin(k * Math.PI) * 30; spirit(b, x, y, sp.r * 0.85, SPR[i], 'happy', 30 + i, t, i); }
     });
+    sc.parts.forEach((p) => { if (p.kind === 'spark') { const sh = p.life > 0.5 ? 5 : p.life > 0.25 ? 4 : 3, X = p.x, Y = p.y + ex; b.put(X, Y, SPR[p.col], sh, 0, 1); if (p.life > 0.4) { b.put(X + 1, Y, SPR[p.col], sh - 1, 0, 1); b.put(X - 1, Y, SPR[p.col], sh - 1, 0, 1); b.put(X, Y + 1, SPR[p.col], sh - 1, 0, 1); b.put(X, Y - 1, SPR[p.col], sh - 1, 0, 1); } } });
     sc.parts.forEach((p) => { if (p.kind === 'drop') { b.put(p.x, p.y + ex, 'white', 5, 0, 1); b.put(p.x, p.y + ex + 1, 'water', 5, 0, 1); } });
     sc.ripples.forEach((r) => { const w = Math.round(r.r * 1.8); if (r.life > 0.2) { b.rect(r.x - w, r.y + ex + 2, Math.max(2, w * 0.7), 1, 'water', 5); b.rect(r.x + w * 0.3, r.y + ex + 2, Math.max(2, w * 0.7), 1, 'water', 5); } });
     // a jumping fish, fireflies, lily pads and foreground reeds
@@ -368,6 +370,10 @@
       if (EM[i] === 2) sh = 0; else if (EM[i]) sh = S8[i];
       else { const lit = ID[i] ? L[i] : r === RI.water ? L[i] * 0.6 : 0; sh = S8[i] + (ID[i] ? -1 : 0) + Math.floor(lit); }
       sh = sh < 0 ? 0 : sh > 5 ? 5 : sh; out[i] = COL32[r * 6 + sh];
+    }
+    if (sc.shake > 0.5) {
+      const dx = Math.round(Math.sin(t * 61) * sc.shake * 0.7), dy = Math.round(Math.cos(t * 47) * sc.shake * 0.7);
+      if (dx || dy) { const tmp = C.tmp || (C.tmp = new Uint32Array(out.length)); tmp.set(out); for (let y = 0; y < H; y++) { const sy = clamp(y - dy, 0, H - 1) * W; for (let x = 0; x < W; x++) out[y * W + x] = tmp[sy + clamp(x - dx, 0, W - 1)]; } }
     }
     ctx.putImageData(C.img, 0, 0);
     ui(sc, ctx, ex);

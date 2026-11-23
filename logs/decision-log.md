@@ -84,3 +84,10 @@ Every decision: date, what, why, sources. Newest first.
 - Why: Thomas: "the game is very cheap, every aspect can be better". The old frame left the boat small in the middle with empty sky and water, and the characters were simple blobs.
 - Balance: the bigger boat put spirits that fell overboard at the screen edge, which made the game harder (intended 3.8/5). Overboard offset 28 → 20 and lost line −60 → −50. Bot test: idle/spam/hold/random lose; intended 100% (3.9), casual 100% (4.2), clumsy 100% (3.6).
 - Next: pass 2 (animation, feedback, sound), then the clip and republish.
+
+## 2026-11-23 — Night Ferry quality pass 2: animation, feedback, sound
+- What: the toad turns to face where he walks and blinks while awake. Screen shake when the Deep One rises, when a spirit falls in and when one is taken. Sparkles in the spirit's colour when one climbs back or lands home. A blinking red "!" and a heartbeat sound while a spirit clings to the edge. An original lullaby in D major pentatonic (waltz time) that turns slow and low while the Deep One is up. Water laps and crickets as ambience. Clips are now loudness-normalised (loudnorm I=-16) in tools/record_clip.py.
+- Not done: slow motion at the edge, because it would change the balance (it gives the player more time).
+- Fix: splash, bubble and sparkle randomness now uses its own generator (this.fx), so visual effects never shift gameplay events.
+- Bot test (20 seeds): idle/spam/hold/random lose; intended 100% (4.5/5), casual 100% (4.2), clumsy 90% (3.5). Phone check: 60 fps, no errors.
+- Published: artifact version 1795457732-47bd. Clip: out/night-ferry-clip.mp4 (seed 3, casual, 17 s, 1080x1920).

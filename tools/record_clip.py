@@ -95,7 +95,7 @@ def main():
             "-i", str(tmp / "audio.wav"),
             "-vf", ("scale=1080:-2:flags=lanczos" if args.smooth else f"scale=iw*{args.scale}:ih*{args.scale}:flags=neighbor"),
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", str(out),
+            "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "44100", "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", str(out),
         ]
         subprocess.run(cmd, check=True)
     print(f"Clip: {out} ({args.seconds:.0f}s, seed {args.seed}, policy {args.policy})")
