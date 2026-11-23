@@ -35,7 +35,8 @@ BATCH_JS = """
       inp = { down: (c.f - c.endF) === 30 };
     } else {
       c.endF = -1;
-      inp = c.policies[policyName](S.api.observe(), c.f);
+      const pol = c.policies[policyName] || ((o, f) => S.api.policies[policyName](o, f));
+      inp = pol(S.api.observe(), c.f);
     }
     S.setInput(inp);
     S.step(1);

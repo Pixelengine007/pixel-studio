@@ -33,7 +33,7 @@ EPISODE_JS = """
     status = S.api.status();
   }
   return { frames: f, state: f >= maxFrames && status.state === 'playing' ? 'timeout' : status.state,
-           score: status.score, time: status.time };
+           score: status.score, time: status.time, endless: !!status.endless };
 }
 """ % STRATEGIES_JS
 
@@ -63,6 +63,7 @@ def main():
         browser.close()
 
     summary, warnings = {}, []
+    endless = any(r.get("endless") for runs in results.values() for r in runs)
     for s, runs in results.items():
         if not runs:
             continue
@@ -75,11 +76,20 @@ def main():
             "avg_seconds": round(statistics.mean(r["time"] for r in runs), 1),
             "min_seconds": round(min(r["time"] for r in runs), 1),
         }
+        if endless:
+            continue  # endless games are judged on score below
         if s in TRIVIAL and wins:
             warnings.append(f"'{s}' can win ({wins}/{len(runs)}): the game is too easy or has an exploit")
         if s in TRIVIAL and summary[s]["timeouts"]:
             warnings.append(f"'{s}' never ends in {args.max_seconds:.0f}s: possible stall or missing fail state")
-    if "intended" in summary and summary["intended"]["win_rate"] == 0:
+    if endless and "intended" in summary:
+        best = summary["intended"]["avg_score"]
+        for s in TRIVIAL:
+            if s in summary and summary[s]["avg_score"] >= max(3, best * 0.5):
+                warnings.append(f"'{s}' scores {summary[s]['avg_score']} vs intended {best}: skill matters too little")
+        if best < 5:
+            warnings.append("the intended strategy scores very low: too hard, or the policy/game is broken")
+    elif "intended" in summary and summary["intended"]["win_rate"] == 0:
         warnings.append("the intended strategy never wins: too hard, or the policy/game is broken")
 
     report = {
@@ -87,6 +97,7 @@ def main():
         "date": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "errors": sorted(set(errors)),
         "warnings": warnings,
+        "endless": endless,
         "summary": summary,
         "note": "Mechanical evidence only. It does not show that the game is fun.",
     }

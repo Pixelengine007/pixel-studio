@@ -136,58 +136,72 @@
   const GLYPHS = {};
   Object.keys(GLYPH_ROWS).forEach((k) => { GLYPHS[k] = GLYPH_ROWS[k].join(''); });
 
-  function textTexture(scene, str, color, shadow) {
+  // size: each font pixel becomes size x size real pixels (drawn natively, so outlines stay 1 pixel thin).
+  function textTexture(scene, str, color, shadow, outline, size) {
     str = String(str).toUpperCase();
-    const key = `txt|${str}|${color}|${shadow || ''}`;
+    const k = size || 1;
+    const key = `txt|${str}|${color}|${shadow || ''}|${outline || ''}|${k}`;
     if (scene.textures.exists(key)) return key;
-    const w = Math.max(1, str.length * 4 - 1 + (shadow ? 1 : 0));
-    const h = 5 + (shadow ? 1 : 0);
+    const pad = outline ? 1 : 0;
+    const w = Math.max(1, (str.length * 4 - 1) * k + (shadow ? 1 : 0) + pad * 2);
+    const h = 5 * k + (shadow ? 1 : 0) + pad * 2 + (outline && shadow ? 1 : 0);
     const tex = scene.textures.createCanvas(key, w, h);
     const ctx = tex.getContext();
     const draw = (ox, oy, c) => {
+      ox += pad; oy += pad;
       for (let i = 0; i < str.length; i++) {
         const g = GLYPHS[str[i]] || GLYPHS['?'];
         for (let p = 0; p < 15; p++) {
           if (g[p] !== '#') continue;
           ctx.fillStyle = PAL[c];
-          ctx.fillRect(ox + i * 4 + (p % 3), oy + Math.floor(p / 3), 1, 1);
+          ctx.fillRect(ox + (i * 4 + (p % 3)) * k, oy + Math.floor(p / 3) * k, k, k);
         }
       }
     };
-    if (shadow) draw(1, 1, shadow);
+    if (outline) {
+      // outline: draw the text in the outline colour at every neighbouring offset, then the text on top
+      if (shadow) { for (const [dx, dy] of [[-1, 1], [0, 1], [1, 1], [0, 2], [1, 2], [-1, 2]]) draw(dx, dy, shadow); }
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) draw(dx, dy, outline);
+    } else if (shadow) draw(1, 1, shadow);
     draw(0, 0, color);
     tex.refresh();
     return key;
   }
 
-  // Returns a Phaser Image. scale must be a whole number. Call .setText(str) to change it.
+  // Returns a Phaser Image. Prefer size (native big letters) over scale. Call .setText(str) to change it.
   function text(scene, x, y, str, opts) {
-    const o = Object.assign({ color: '4', shadow: '0', scale: 1, originX: 0.5, originY: 0.5 }, opts || {});
-    const img = scene.add.image(x, y, textTexture(scene, str, o.color, o.shadow));
+    const o = Object.assign({ color: '4', shadow: '0', outline: null, size: 1, scale: 1, originX: 0.5, originY: 0.5 }, opts || {});
+    const img = scene.add.image(x, y, textTexture(scene, str, o.color, o.shadow, o.outline, o.size));
     img.setOrigin(o.originX, o.originY).setScale(o.scale).setDepth(1000);
-    img.setText = (s) => { img.setTexture(textTexture(scene, s, o.color, o.shadow)); return img; };
+    img.setText = (s) => { img.setTexture(textTexture(scene, s, o.color, o.shadow, o.outline, o.size)); return img; };
     return img;
   }
 
   // ---------- Input (touch, mouse, keyboard, and bot share one state) ----------
   const input = {
     down: false, pressed: false, released: false, left: false, right: false,
-    x: W / 2, y: H / 2, _prev: false, _virtual: null,
+    x: W / 2, y: H / 2, _prev: false, _virtual: null, _tap: false,
     update() {
       if (this._virtual) Object.assign(this, this._virtual);
-      this.pressed = this.down && !this._prev;
+      // _tap latches a press that started and ended between two frames (a quick tap or click)
+      this.pressed = (this.down && !this._prev) || this._tap;
+      this._tap = false;
       this.released = !this.down && this._prev;
       this._prev = this.down;
     },
   };
   function bindInput(scene) {
     if (fixed) return; // bot and clip modes are driven by the tools only
-    scene.input.on('pointerdown', (p) => { input.down = true; input.x = p.x; input.y = p.y; unlockAudio(); });
+    scene.input.on('pointerdown', (p) => { input.down = true; input._tap = true; input.x = p.x; input.y = p.y; unlockAudio(); });
     scene.input.on('pointermove', (p) => { input.x = p.x; input.y = p.y; });
     scene.input.on('pointerup', () => { input.down = false; });
     const k = scene.input.keyboard;
     if (!k) return;
-    const set = (code, field, val) => k.on(`key${val ? 'down' : 'up'}-${code}`, () => { input[field] = val; if (val) unlockAudio(); });
+    const set = (code, field, val) => k.on(`key${val ? 'down' : 'up'}-${code}`, (ev) => {
+      if (val && field === 'down' && !(ev && ev.repeat)) input._tap = true;
+      input[field] = val;
+      if (val) unlockAudio();
+    });
     ['SPACE', 'UP', 'W', 'Z'].forEach((c) => { set(c, 'down', true); set(c, 'down', false); });
     ['LEFT', 'A'].forEach((c) => { set(c, 'left', true); set(c, 'left', false); });
     ['RIGHT', 'D'].forEach((c) => { set(c, 'right', true); set(c, 'right', false); });
@@ -209,7 +223,8 @@
     if (fixed || liveCtx) return;
     try { liveCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { liveCtx = null; }
   }
-  function schedule(ctx, name, when) {
+  function schedule(ctx, name, when, pitch) {
+    const k = pitch || 1;
     (SFX[name] || []).forEach((n) => {
       const t0 = when + n.at;
       const g = ctx.createGain();
@@ -228,8 +243,8 @@
       } else {
         src = ctx.createOscillator();
         src.type = n.type;
-        src.frequency.setValueAtTime(n.f0, t0);
-        src.frequency.exponentialRampToValueAtTime(Math.max(1, n.f1), t0 + n.dur);
+        src.frequency.setValueAtTime(n.f0 * k, t0);
+        src.frequency.exponentialRampToValueAtTime(Math.max(1, n.f1 * k), t0 + n.dur);
       }
       src.connect(g);
       src.start(t0);
@@ -237,10 +252,12 @@
     });
   }
   const soundLog = [];
-  function sfx(name) {
-    soundLog.push({ name, t: studio.frameIndex / 60 });
-    if (liveCtx) { try { schedule(liveCtx, name, liveCtx.currentTime); } catch (e) { /* ignore */ } }
+  // pitch: optional multiplier (1 = normal). Games can add their own effects with defineSfx.
+  function sfx(name, pitch) {
+    soundLog.push({ name, t: studio.frameIndex / 60, pitch: pitch || 1 });
+    if (liveCtx) { try { schedule(liveCtx, name, liveCtx.currentTime, pitch); } catch (e) { /* ignore */ } }
   }
+  function defineSfx(name, notes) { SFX[name] = notes; }
 
   function wavBase64(buffer) {
     const data = buffer.getChannelData(0);
@@ -264,7 +281,7 @@
     const start = fromSecond || 0;
     const rate = 44100;
     const ctx = new OfflineAudioContext(1, Math.ceil(rate * seconds), rate);
-    soundLog.filter((e) => e.t >= start && e.t < start + seconds).forEach((e) => schedule(ctx, e.name, e.t - start));
+    soundLog.filter((e) => e.t >= start && e.t < start + seconds).forEach((e) => schedule(ctx, e.name, e.t - start, e.pitch));
     const buf = await ctx.startRendering();
     return wavBase64(buf);
   }
@@ -272,7 +289,7 @@
   // ---------- Game creation and tool hooks ----------
   const studio = {
     W, H, DT, PAL, hex, mode, fixed, seed: parseInt(params.get('seed') || '1', 10),
-    rng, sprite, frames, text, input, bindInput, sfx, soundLog, renderAudio,
+    rng, sprite, frames, text, input, bindInput, sfx, defineSfx, soundLog, renderAudio,
     game: null, ready: false, frameIndex: 0, api: null,
   };
 

@@ -2,6 +2,14 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Sky Stack rejected as a concept (visuals accepted)
+- **What:** Thomas judged the visuals fine but the idea generic: "a basic stacking game, there are a million of those". Sky Stack stays only as a visual and tooling reference; it will not be posted.
+- **Lesson:** the twist was cosmetic (the world changes), not a change in what the player does. New rule: the twist must change the core action, and the game needs living systems (creatures or things with behaviour the player influences, like the flock and fox in Outrun the Flock) so play produces surprising moments.
+
+## 2026-11-23 — Proof game: Sky Stack
+- **What:** before any posting or automation, build one new small game at the Outrun the Flock visual bar, as proof for Thomas. Concept: one-tap stacking (proven, instantly understood, quick retry) with a world that changes with height: city, clouds, sunset, night, space.
+- **Why:** Thomas asked for evidence of quality first. Stacking has the strongest fit with research round 1 for a one-session proof: one-thumb, instant understanding, failure is dramatic, and height gives a built-in "scale reveal" clip hook (research: fails, satisfying loops and scale reveals hook strangers in the first second).
+
 ## 2026-11-23 — Phaser 3.90 (not 4.x) for now
 - **What:** vendor Phaser 3.90.0 as one file, no build step.
 - **Why:** stable, well-documented API; plain files work directly on GitHub Pages. Revisit Phaser 4 if load size or performance becomes a problem.
