@@ -178,3 +178,8 @@ Every decision: date, what, why, sources. Newest first.
 - Arrow keys or WASD run, Enter restarts after a night; dragging with a thumb or the mouse works as before. The keys are read in the toy itself, not in shared/studio.js.
 - Checked on a desktop-sized screen: up, right (D), down-left together, W; and dragging on phone-sized and desktop screens. No errors. Fresh link.
 - For later: when this becomes a game, keyboard control should move into the shared input code so every game gets it.
+
+## 2026-11-23 — Concept approved by play: rope and giants. Trees get one clear use
+- Thomas after playing toy 3: "great, contineu, only the use of the tree trunks is not clear". This is his approval of the concept under the toy rule; the next step is the real game.
+- Trees (toy 4): ring one tree and the rope is tied to it; the other trees pulse and a prompt says what you can do next. Ring a second tree and a tripwire is strung between them: the next giant to walk into it goes down the way it was walking, and the wire is used up. Ring a giant instead and it is tied to the tree and trips when it walks on (works in either order). The opening hint names the tripwire.
+- Checked: a test that strings a wire between the two upper trees and waits: the giant trips on it; ringing bot still wins 2 of 3 nights; doing nothing loses. Phone-sized and desktop screens, no errors. Fresh link.

@@ -10,7 +10,7 @@
   'use strict';
   const S = window.Studio, RES = 2, TAU = Math.PI * 2;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const SPEED = 178, LEASH = 112, TREE_LEASH = 240, TREE_LINK = 150, NOTICE = 150, LAMPS = 3;
+  const SPEED = 178, LEASH = 112, TREE_LEASH = 330, TREE_LINK = 150, NOTICE = 150, LAMPS = 3;
   const NIGHT = [
     { t: 0.6, x: 180 },
     { t: 8, x: 105 }, { t: 8.5, x: 255 },
@@ -45,7 +45,8 @@
       this.trail = [];            // the loose rope dragging behind you
       this.chain = [];            // what the rope is caught on, in order; the last one is on your end of the rope
       this.slipT = 0; this.tight = false;
-      this.trees = [[58, 0.36], [304, 0.5], [120, 0.68]].map(([x, k], i) => ({ kind: 'tree', id: 't' + i, x, y: Math.round(this.H * k), r: 11, need: 1, rings: 0, lap: 0, lastAng: null }));
+      this.wires = [];            // tripwires strung between two trees
+      this.trees = [[56, 0.33], [304, 0.39], [92, 0.6], [272, 0.65]].map(([x, k], i) => ({ kind: 'tree', id: 't' + i, x, y: Math.round(this.H * k), r: 11, need: 1, rings: 0, lap: 0, lastAng: null }));
       this.giants = []; this.next = 0; this.gid = 0;
       this.down = 0; this.hits = 0; this.score = 0; this.combo = 0; this.lastDownT = -9; this.bestCombo = 1;
       this.shake = 0; this.stick = null; this.msg = null;
@@ -164,6 +165,10 @@
         c.lastAng = a;
         if (Math.abs(c.lap) >= TAU) {
           c.lap = 0; c.rings += 1; this.trail = [];
+          const held = this.chain[this.chain.length - 1];
+          if (c.kind === 'tree' && held && held.kind === 'tree' && held !== c) {       // tree to tree: a tripwire
+            this.wires.push({ a: held, b: c }); this.letGo(); c.rings = 0; S.sfx('catch', 1.6); this.say('TRIPWIRE SET', '#ffd23a'); return;
+          }
           if (!this.chain.includes(c)) this.chain.push(c);
           S.sfx('catch', 1 + (c.rings - 1) * 0.25 + (this.chain.length - 1) * 0.12);
           if (c.kind === 'giant' && c.rings < c.need) this.say('ONE MORE RING', '#ffd23a');
@@ -178,8 +183,16 @@
       // a giant tied to a tree trips by itself when it walks too far from the tree
       for (let i = 0; i + 1 < ch.length; i++) {
         const a = ch[i], b = ch[i + 1];
-        if (a.kind === 'tree' && b.kind === 'giant' && b.rings >= b.need) { const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1; if (d > TREE_LINK) { S.sfx('tight'); this.topple(b, { x: dx / d, y: dy / d }); this.letGo(); return; } }
+        const tree = a.kind === 'tree' ? a : b.kind === 'tree' ? b : null, g = a.kind === 'giant' ? a : b.kind === 'giant' ? b : null;
+        if (tree && g && g.rings >= g.need) { const dx = g.x - tree.x, dy = g.y - tree.y, d = Math.hypot(dx, dy) || 1; if (d > TREE_LINK) { S.sfx('tight'); this.say('TIED TO THE TREE!', '#ffd23a'); this.topple(g, { x: dx / d, y: dy / d }); this.letGo(); return; } }
       }
+      // a giant that walks into a tripwire goes down the way it was walking, and the wire is used up
+      for (const w of this.wires) {
+        const sx = w.b.x - w.a.x, sy = w.b.y - w.a.y, sl = sx * sx + sy * sy;
+        const g = this.giants.find((q) => { if (q.state !== 'walk') return false; const t = clamp(((q.x - w.a.x) * sx + (q.y - w.a.y) * sy) / sl, 0, 1); return Math.hypot(w.a.x + sx * t - q.x, w.a.y + sy * t - q.y) < q.r; });
+        if (g) { w.used = true; S.sfx('tight'); this.say('TRIPPED ON THE WIRE!', '#ffd23a'); this.topple(g, { x: g.hx, y: g.hy }); }
+      }
+      this.wires = this.wires.filter((w) => !w.used);
       const last = ch[ch.length - 1]; if (!last) { this.slipT = 0; return; }
       const dx = P.x - last.x, dy = P.y - last.y, d = Math.hypot(dx, dy) || 1, leash = last.kind === 'tree' ? TREE_LEASH : LEASH + (last.big ? 10 : 0);
       if (d < leash) { this.slipT = 0; return; }
@@ -198,7 +211,7 @@
       }
       // otherwise the rope holds you; pull against it for a moment and it slips off
       P.x = last.x + dx / d * leash; P.y = last.y + dy / d * leash;
-      if (pulling) { this.slipT += dt; if (this.slipT > 0.45) { if (last.kind === 'giant') this.say(last.need > 1 ? 'IT SLIPPED - TWO RINGS' : 'IT SLIPPED', '#ff7a6a'); S.sfx('slip'); this.unhook(last); this.slipT = 0; } } else this.slipT = 0;
+      if (pulling) { this.slipT += dt; if (this.slipT > 0.45) { this.say(last.kind === 'tree' ? 'THE ROPE CAME OFF THE TREE' : last.need > 1 ? 'IT SLIPPED - TWO RINGS' : 'IT SLIPPED', '#ff7a6a'); S.sfx('slip'); this.unhook(last); this.slipT = 0; } } else this.slipT = 0;
     }
 
     // ---------- test bot: ring the nearest giant, then pull from the village side ----------
@@ -227,7 +240,14 @@
         observe: () => ({ t: this.t, down: this.down, hits: this.hits, score: this.score, best: this.bestCombo, chain: this.chain.map((c) => [c.id, c.rings]), giants: this.giants.map((g) => [g.id, g.state, Math.round(g.x), Math.round(g.y), g.chase]) }),
         status: () => ({ state: this.state, score: this.score, time: this.t }),
         reset: (seed) => { S.seed = seed; this.scene.restart(); },
-        policies: { intended: ring(), showcase: ring() },
+        policies: { intended: ring(), showcase: ring(), wire: (() => { let first = true; return () => {   // test: string a tripwire between the two upper trees, then wait below it
+          if (first) { first = false; return { down: true, x: 180 * RES, y: 400 * RES }; }
+          const P = self.p, held = self.chain[self.chain.length - 1];
+          let vx, vy;
+          if (self.wires.length) { vx = 180 - P.x; vy = self.H * 0.52 - P.y; if (Math.hypot(vx, vy) < 6) return { down: true, x: 180 * RES, y: 400 * RES }; }
+          else { const c = held && held.kind === 'tree' ? self.trees[1] : self.trees[0], dx = P.x - c.x, dy = P.y - c.y, d = Math.hypot(dx, dy) || 1; vx = -dy / d + (40 - d) / 20 * dx / d; vy = dx / d + (40 - d) / 20 * dy / d; }
+          const n = Math.hypot(vx, vy) || 1; return { down: true, x: (180 + vx / n * 40) * RES, y: (400 + vy / n * 40) * RES };
+        }; })() },
       });
     }
 
@@ -249,7 +269,11 @@
       }
       // fallen and falling giants
       this.giants.forEach((g) => { if (g.state !== 'fall' && g.state !== 'down') return; const k = g.state === 'fall' ? Math.min(1, g.ft / 0.38) : 1, len = 140 * k; ctx.globalAlpha = g.state === 'down' ? Math.max(0, Math.min(1, (3.2 - g.ft) / 0.8)) : 1; ctx.strokeStyle = '#6d7482'; ctx.lineWidth = 56; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x + g.dir.x * len, g.y + g.dir.y * len); ctx.stroke(); ctx.strokeStyle = '#8a91a0'; ctx.lineWidth = 30; ctx.beginPath(); ctx.moveTo(g.x + g.dir.x * len * 0.75, g.y + g.dir.y * len * 0.75); ctx.lineTo(g.x + g.dir.x * len, g.y + g.dir.y * len); ctx.stroke(); ctx.globalAlpha = 1; });
-      // trees
+      // tripwires
+      this.wires.forEach((w) => { ctx.strokeStyle = '#fff1b0'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke(); ctx.strokeStyle = 'rgba(255,241,176,0.25)'; ctx.lineWidth = 8; ctx.stroke(); });
+      // trees: with a rope on one tree, the others pulse to show where the other end can go
+      const treeHeld = last && last.kind === 'tree';
+      this.trees.forEach((c) => { if (treeHeld && c !== last) { ctx.strokeStyle = `rgba(255,210,58,${0.35 + 0.3 * Math.sin(t * 6)})`; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.arc(c.x, c.y, 30 + Math.sin(t * 6) * 2, 0, TAU); ctx.stroke(); ctx.setLineDash([]); } });
       this.trees.forEach((c) => { ctx.fillStyle = '#35503d'; ctx.beginPath(); ctx.arc(c.x, c.y, 22, 0, TAU); ctx.fill(); ctx.fillStyle = '#6b5a45'; ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, TAU); ctx.fill(); });
       // standing giants: where the next foot will land, the feet, the body, the head (shows where it is going)
       this.giants.forEach((g) => {
@@ -282,14 +306,15 @@
       ctx.fillStyle = P.stun > 0 ? '#ff7a6a' : '#ffffff'; ctx.beginPath(); ctx.ellipse(P.x, P.y, P.stun > 0 ? 9 : 6.5, P.stun > 0 ? 4 : 6.5, 0, 0, TAU); ctx.fill();
       ctx.strokeStyle = '#11141a'; ctx.lineWidth = 1.5; ctx.stroke();
       if (last && last.kind === 'giant' && last.rings >= last.need) { ctx.fillStyle = '#fff1b0'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center'; ctx.fillText('RUN AWAY TO PULL', P.x, P.y - 14); }
+      if (treeHeld) { ctx.fillStyle = '#fff1b0'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.fillText('RING ANOTHER TREE: TRIPWIRE', clamp(P.x, 96, 264), P.y - 26); ctx.fillText('OR RING A GIANT: TIED TO THE TREE', clamp(P.x, 112, 248), P.y - 14); }
       // thumb stick
       if (this.stick) { ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(this.stick.x, this.stick.y, 34, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(this.stick.x + P.wx * 34, this.stick.y + P.wy * 34, 10, 0, TAU); ctx.fill(); }
       // words
       ctx.setTransform(RES, 0, 0, RES, 0, 0); ctx.textAlign = 'center';
-      ctx.fillStyle = '#8b93a5'; ctx.font = '10px monospace'; ctx.fillText('GREY TOY 3 + KEYS - NO ART YET', 180, 16);
+      ctx.fillStyle = '#8b93a5'; ctx.font = '10px monospace'; ctx.fillText('GREY TOY 4 - NO ART YET', 180, 16);
       ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px monospace'; ctx.fillText(`GIANTS ${this.down}/${NIGHT.length}`, 76, 38); ctx.fillText(`SCORE ${this.score}`, 284, 38);
       for (let i = 0; i < LAMPS; i++) { ctx.fillStyle = i < LAMPS - this.hits ? '#ffd23a' : '#3a3f4a'; ctx.fillRect(160 + i * 16, 27, 10, 12); }
-      if (this.t < 18 && this.state === 'playing') { ctx.fillStyle = '#e2c477'; ctx.font = '11px monospace'; ctx.fillText('DRAG TO RUN, OR USE THE ARROW KEYS / WASD', 180, H - 122); ctx.fillText('RUN A RING ROUND A GIANT, THEN RUN AWAY', 180, H - 108); ctx.fillText('IT FALLS AWAY FROM YOU - ONTO THE OTHERS', 180, H - 94); ctx.fillText('GIANTS COME AFTER YOU WHEN YOU ARE CLOSE', 180, H - 80); }
+      if (this.t < 18 && this.state === 'playing') { ctx.fillStyle = '#e2c477'; ctx.font = '11px monospace'; ctx.fillText('DRAG TO RUN, OR USE THE ARROW KEYS / WASD', 180, H - 122); ctx.fillText('RUN A RING ROUND A GIANT, THEN RUN AWAY', 180, H - 108); ctx.fillText('IT FALLS AWAY FROM YOU - ONTO THE OTHERS', 180, H - 94); ctx.fillText('RING TWO TREES TO STRING A TRIPWIRE', 180, H - 80); }
       if (this.msg && this.state === 'playing') { ctx.fillStyle = this.msg.col; ctx.font = 'bold 18px monospace'; ctx.fillText(this.msg.str, 180, 76); }
       if (this.state !== 'playing') {
         ctx.fillStyle = `rgba(10,12,16,${Math.min(0.7, this.endT)})`; ctx.fillRect(0, 0, 360, H);
