@@ -51,6 +51,8 @@
       this.shake = 0; this.stick = null; this.msg = null;
       this.registerTools();
       S.bindInput(this);
+      // keyboard: arrow keys or WASD to run (the page needs one click first so it listens to the keys)
+      this.keys = !S.fixed && this.input.keyboard ? this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,ENTER') : null;
     }
 
     spawn(e) {
@@ -79,12 +81,14 @@
       S.input.update();
       this.t += dt; this.shake = Math.max(0, this.shake - dt * 14);
       if (this.msg && (this.msg.t -= dt) <= 0) this.msg = null;
-      if (this.state !== 'playing') { this.endT += dt; this.giants.forEach((g) => this.updateGiant(g, dt)); if (this.endT > 1.2 && S.input.pressed) this.scene.restart(); return; }
+      if (this.state !== 'playing') { this.endT += dt; this.giants.forEach((g) => this.updateGiant(g, dt)); if (this.endT > 1.2 && (S.input.pressed || (this.keys && this.keys.ENTER.isDown))) this.scene.restart(); return; }
       // floating stick: where the thumb lands is the centre
       let wx = 0, wy = 0;
-      if (S.input.pressed || (S.input.down && !this.stick)) this.stick = { x: S.input.x / RES, y: S.input.y / RES };
-      if (!S.input.down) this.stick = null;
+      const K = this.keys, touching = S.fixed ? S.input.down : this.input.activePointer.isDown;
+      if (touching && !this.stick) this.stick = { x: S.input.x / RES, y: S.input.y / RES };
+      if (!touching) this.stick = null;
       if (this.stick) { const dx = S.input.x / RES - this.stick.x, dy = S.input.y / RES - this.stick.y, d = Math.hypot(dx, dy); if (d > 4) { const k = Math.min(1, d / 34) / d; wx = dx * k; wy = dy * k; } }
+      if (K) { const kx = (K.RIGHT.isDown || K.D.isDown ? 1 : 0) - (K.LEFT.isDown || K.A.isDown ? 1 : 0), ky = (K.DOWN.isDown || K.S.isDown ? 1 : 0) - (K.UP.isDown || K.W.isDown ? 1 : 0); if (kx || ky) { const n = Math.hypot(kx, ky); wx = kx / n; wy = ky / n; } }
       P.wx = wx; P.wy = wy;
       if (P.stun > 0) P.stun -= dt;
       else { const ox = P.x, oy = P.y; P.x = clamp(P.x + wx * SPEED * dt, 8, 352); P.y = clamp(P.y + wy * SPEED * dt, 60, this.H - 70); if (Math.hypot(P.x - ox, P.y - oy) > 0.2) this.dragTrail(); }
@@ -282,10 +286,10 @@
       if (this.stick) { ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(this.stick.x, this.stick.y, 34, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(this.stick.x + P.wx * 34, this.stick.y + P.wy * 34, 10, 0, TAU); ctx.fill(); }
       // words
       ctx.setTransform(RES, 0, 0, RES, 0, 0); ctx.textAlign = 'center';
-      ctx.fillStyle = '#8b93a5'; ctx.font = '10px monospace'; ctx.fillText('GREY TOY 3 - NO ART YET', 180, 16);
+      ctx.fillStyle = '#8b93a5'; ctx.font = '10px monospace'; ctx.fillText('GREY TOY 3 + KEYS - NO ART YET', 180, 16);
       ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px monospace'; ctx.fillText(`GIANTS ${this.down}/${NIGHT.length}`, 76, 38); ctx.fillText(`SCORE ${this.score}`, 284, 38);
       for (let i = 0; i < LAMPS; i++) { ctx.fillStyle = i < LAMPS - this.hits ? '#ffd23a' : '#3a3f4a'; ctx.fillRect(160 + i * 16, 27, 10, 12); }
-      if (this.t < 18 && this.state === 'playing') { ctx.fillStyle = '#e2c477'; ctx.font = '11px monospace'; ctx.fillText('RUN A RING ROUND A GIANT, THEN RUN AWAY', 180, H - 108); ctx.fillText('IT FALLS AWAY FROM YOU - ONTO THE OTHERS', 180, H - 94); ctx.fillText('GIANTS COME AFTER YOU WHEN YOU ARE CLOSE', 180, H - 80); }
+      if (this.t < 18 && this.state === 'playing') { ctx.fillStyle = '#e2c477'; ctx.font = '11px monospace'; ctx.fillText('DRAG TO RUN, OR USE THE ARROW KEYS / WASD', 180, H - 122); ctx.fillText('RUN A RING ROUND A GIANT, THEN RUN AWAY', 180, H - 108); ctx.fillText('IT FALLS AWAY FROM YOU - ONTO THE OTHERS', 180, H - 94); ctx.fillText('GIANTS COME AFTER YOU WHEN YOU ARE CLOSE', 180, H - 80); }
       if (this.msg && this.state === 'playing') { ctx.fillStyle = this.msg.col; ctx.font = 'bold 18px monospace'; ctx.fillText(this.msg.str, 180, 76); }
       if (this.state !== 'playing') {
         ctx.fillStyle = `rgba(10,12,16,${Math.min(0.7, this.endT)})`; ctx.fillRect(0, 0, 360, H);
@@ -293,7 +297,7 @@
         ctx.fillStyle = won ? '#ffd23a' : '#ff7a6a'; ctx.font = 'bold 22px monospace'; ctx.fillText(won ? 'DAWN. VILLAGE SAVED' : 'THE VILLAGE WENT DARK', 180, H * 0.36);
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 14px monospace'; ctx.fillText(`SCORE ${this.score}`, 180, H * 0.36 + 34);
         ctx.font = '12px monospace'; ctx.fillStyle = '#c8cedb'; ctx.fillText(`GIANTS DOWN ${this.down}/${NIGHT.length}   LAMPS LEFT ${Math.max(0, LAMPS - this.hits)}`, 180, H * 0.36 + 58); ctx.fillText(`BEST PULL: ${this.bestCombo} AT ONCE`, 180, H * 0.36 + 78);
-        if (this.endT > 1.2 && Math.sin(t * 4) > -0.3) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px monospace'; ctx.fillText('TAP TO PLAY AGAIN', 180, H * 0.36 + 120); }
+        if (this.endT > 1.2 && Math.sin(t * 4) > -0.3) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px monospace'; ctx.fillText('TAP OR PRESS ENTER TO PLAY AGAIN', 180, H * 0.36 + 120); }
       }
       ctx.restore();
     }
