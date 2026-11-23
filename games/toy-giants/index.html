@@ -11,6 +11,14 @@
   </style>
 </head>
 <body>
+  <div id="boot" style="position:fixed;left:0;right:0;top:42%;z-index:-1;text-align:center;color:#8b93a5;font:15px monospace;padding:0 16px">Loading the toy...</div>
+  <script>
+    // if anything fails, say so on the screen instead of showing an empty page
+    window.addEventListener('error', function (e) {
+      var d = document.getElementById('boot'); if (d.style.zIndex === '9') return; var what = e.message ? e.message + ' (' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || '?') + ')' : 'a file did not load: ' + ((e.target && (e.target.src || e.target.href)) || 'unknown');
+      d.style.zIndex = 9; d.style.color = '#ff7a6a'; d.style.background = '#111'; d.style.top = '30%'; d.textContent = 'Something went wrong: ' + what;
+    }, true);
+  </script>
   <div id="game"></div>
   <script src="../../vendor/phaser-3.90.0.min.js"></script>
   <script src="../../shared/studio.js"></script>

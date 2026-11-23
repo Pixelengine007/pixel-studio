@@ -33,3 +33,8 @@ Read before starting a new game. Newest game first; each lesson says what to do 
 - Rule from now on: build a playable feel test of only the core action first, send it to Thomas, and polish only after he says the feel works.
 - Bots prove a game can be won, never that it is fun. Also test "doing nothing": in River Run v1 doing nothing won every run, because bumping the banks acted like guide rails.
 - A strong core action needs a decision the player makes every few seconds, plus a visible cause → effect (I crashed → a spirit flew out → I can steer over it to save it).
+
+## Black screen on toy 2, 23 Nov 2026
+- Thomas saw a black screen right after I published a new version onto a link he already had open. The published file was byte-identical to one that ran in my phone-sized and desktop tests, so I could not reproduce it.
+- Changes: links for Thomas are now built with `tools/bundle.py <game> --site` (index.html + phaser.min.js published together, nothing loaded from another server), every page shows "Loading..." and then any error as text on the screen, and a changed toy goes on a fresh link instead of replacing a page he may have open.
+- If a page is ever blank again, the first question is what the screen says, not a guess.

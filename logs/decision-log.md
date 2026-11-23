@@ -161,3 +161,8 @@ Every decision: date, what, why, sources. Newest first.
 - Toy 2: one rule. Run a full ring round the legs (the lap shows as a growing arc, the caught rope as a band); then run away: when the rope goes tight the legs are pulled from under it and it falls away from you. A dashed circle shows how far to run and a faint shape shows where it will land. Big giants need two rings; too few and the rope slips off after a short pull, with a message. Ring a second giant before pulling and both fall; a giant tied to a tree trips itself.
 - Kept on purpose: the stamping feet and the full ring under them. I did not make it easier by removing the danger, only by making cause and effect readable.
 - Checked: test bot 5 giants down in 34 s (was 5 in 45 s) and still stamped on once; phone-sized screen with touch, about 60 fps, no errors. Same link, new version.
+
+## 2026-11-23 — Toy 2 showed a black screen for Thomas; new self-contained link
+- Could not reproduce: the published file matched the tested file byte for byte, and it runs on phone-sized and desktop screens with every outside server blocked.
+- Likely causes I could not confirm: the page being swapped to the new version while open, or Phaser not arriving from the CDN.
+- Fix for both: fresh link, Phaser published next to the page (checked against the official 3.90.0 package: same sha256), and errors shown on the screen. bundle.py got a --site option. Lesson in docs/game-lessons.md.
