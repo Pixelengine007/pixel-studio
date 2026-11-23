@@ -107,3 +107,10 @@ Every decision: date, what, why, sources. Newest first.
 - Bot test (10 seeds): idle/spam/hold/random all lose (~20 s); intended 100% (2.9 home), casual 90% (2.0), clumsy 60% (0.6). Phone viewport: about 54 fps, drag steering works.
 - Art: top-down in the same HD pixel engine (shared palette, spirits, lantern and font copied from night-ferry/pixel.js); clean grass with sparse tufts instead of a noise texture (Thomas reads noise as a grey filter).
 - Link: https://claude.ai/artifact/73E1n6fZPyekzeEkVofwh1 (feel test, not final art).
+
+## 2026-11-23 — River Run rejected; new way of finding ideas (the Flock test + toy first)
+- Thomas: River Run is "still not very interesting"; Outrun the Flock is his example of an interesting game. He asked for a system that gives good ideas every time.
+- My diagnosis: I started from a world and mood (night lake, toad, spirits) and attached a worn action to it (balance, then dodge). Flock started from the action: a dog influences sheep that have a will of their own.
+- Decision: ideas start from action + creature rule; seven-question Flock test; funnel of 20 → 5 one-sentence pitches → Thomas picks up to 2 → grey-box toys with no art → art only after he enjoys a toy. Taste log in logs/taste-log.md. No tooling (PocketForge's Concept Foundry, project review 0053, could not predict fun).
+- Sources: project reviews 0103, 0133 and 0053; "toys before games" (tinysubversions.com/2009/02/toys-before-games); Unity Learn "Why prototype?".
+- River Run and the side-view Night Ferry are parked; both links stay up. The HD pixel engine and the art lessons carry over.

@@ -11,8 +11,15 @@ Make small, original browser games in our HD pixel-art house style, test them wi
 - Thomas's past taste (PocketForge) is NOT a rule. It is background only.
 - Log every decision with its reasoning and sources in `logs/decision-log.md`; log research in `logs/research-log.md`.
 
+## How we find game ideas (Thomas, 23 Nov 2026: Outrun the Flock is the benchmark for "interesting")
+- Start from the action and the creatures, never from a setting or mood. Every idea is one sentence: "You are X. When you do Y, the creatures do Z. You want W."
+- The Flock test, all seven must be yes before an idea is pitched: (1) the creatures are the game, not cargo: you steer them by influence, not directly; (2) the action is not dodge, jump, shoot, match, stack or balance; (3) understood in 2 seconds without words, from real life; (4) the player decides where to be every second, and there is more than one good way; (5) fun as a toy with no goal; (6) the group creates moments worth a clip; (7) no polished phone version exists.
+- Funnel: about 20 one-sentence ideas → score with the Flock test → pitch the best 5 to Thomas as one sentence each → he picks up to 2 → a grey-box toy of each (shapes only, no art, no goal, built in hours) → Thomas plays → only a toy he enjoys gets a goal, then art. "None of them" is a valid result.
+- Keep a taste log in `logs/taste-log.md`: every idea and toy Thomas liked or rejected, with his words. Use it to sharpen the test.
+- This is a habit, not software. No idea generators, scoring tools or validators (PocketForge built a "Concept Foundry" and it could not predict fun).
+
 ## Only ask Thomas for
-Approval of each new game concept (offer several ideas), logins and account approvals, anything that costs money, legal and tax matters, anything irreversible, and the stop rules (month 3: no clear winner → change approach; month 6: under €100 earned → rethink or stop).
+Approval of each new game concept (5 one-sentence ideas, then his verdict on the grey-box toys), logins and account approvals, anything that costs money, legal and tax matters, anything irreversible, and the stop rules (month 3: no clear winner → change approach; month 6: under €100 earned → rethink or stop).
 
 ## Process rules (learned the hard way in PocketForge, see `docs/pocketforge-lessons.md`)
 - Build games, not systems. No new frameworks, validators or foundries.
