@@ -166,3 +166,10 @@ Every decision: date, what, why, sources. Newest first.
 - Could not reproduce: the published file matched the tested file byte for byte, and it runs on phone-sized and desktop screens with every outside server blocked.
 - Likely causes I could not confirm: the page being swapped to the new version while open, or Phaser not arriving from the CDN.
 - Fix for both: fresh link, Phaser published next to the page (checked against the official 3.90.0 package: same sha256), and errors shown on the screen. bundle.py got a --site option. Lesson in docs/game-lessons.md.
+
+## 2026-11-23 — Grey toy 3: something to plan (giants follow you, dominoes, one night)
+- Thomas on toy 2: "gameplay could be better" (no detail given).
+- My own read, not a guess at his words: in toy 2 every giant was the same separate job (ring, pull, repeat). Nothing to plan, nothing at stake, no reason to stand in one place rather than another.
+- Changes: (1) giants turn and come after you when you are within 150 px, so you can lead them together or away from the village; (2) a falling giant knocks the next one over like dominoes, and one pull that fells several scores 10 × n² each; (3) one night is 14 giants in waves, the village has 3 lamps, a giant that gets through or falls on the houses puts one out, and the night ends in dawn or darkness with a score and "play again".
+- Kept: the ring-then-pull rule, the stamping feet, falling away from you. Not added: new buttons, power-ups, more kinds of giant.
+- Checked in bot runs: doing nothing loses at 36 s; a bot that only rings one giant at a time wins the night in 67–82 s with 0–2 lamps lost and 200–270 points; several-in-one pulls are worth far more, so there is room above that. Phone-sized and desktop screens, about 60 fps, no errors. Fresh link.
