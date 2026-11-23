@@ -2,6 +2,14 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Red Dot level 1: design calls after the first internal review
+- **Restless cats:** cats in the carrier climb back out after a while (Smokey 9 s, Pip 12 s, Mango 16 s, Oreo naps 40 s). **Why:** the first build was a checklist (lure, drop, next). Escapes create the juggling tension and "nooo, Smokey!" moments that a living system should produce, as the flock does in Outrun the Flock.
+- **Spread start positions:** no cat starts next to the carrier. **Why:** the first build let a perfect bot win in 15 s; two cats were basically free.
+- **Timer 75 s; third star for finishing within 45 s.** **Why:** calibrated with three bot players: perfect 23 s, casual (shaky thumb, slow reactions) 32 s, clumsy 48 s. First-time humans should usually make it, but tightly; stars reward skill. Real data will overrule this.
+- **Fixed room for every phone:** the room is always 180 × 320; taller phones get extra wall (picture and a calendar with the vet day circled), not extra floor. **Why:** extra floor made the carrier further away, so the game was harder on tall phones than in clips.
+- **Bigger cats (30 × 24 frames) and long floor planks.** **Why:** the cats are the stars of the clip, and the first floor read as a brick wall.
+- **Open item:** the vase crash only happens with human-style messy play (the bots never cause it). Check in real play whether it happens often enough to matter.
+
 ## 2026-11-23 — Build Red Dot (cats + laser pointer) next
 - **What:** top-down apartment, drag the laser dot, lure cats with personalities into the carrier before the vet appointment. "Not basic" is enough; full uniqueness is not required (Thomas).
 - **Why:** highest score in research round 2 (clip/send potential, one-thumb fit, replay, unlock potential). Design takes the jam players' lessons: clear attention signals (! ? z), rest-then-pounce rhythm, no battery limit.

@@ -22,7 +22,7 @@ EPISODE_JS = """
 ([strategy, maxFrames]) => {
   const S = window.__studio;
   const strategies = %s;
-  const policy = strategies[strategy];
+  const policy = strategies[strategy] || ((o, f) => S.api.policies[strategy](o, f)); // any game-defined policy
   let f = 0;
   let status = S.api.status();
   while (status.state === 'playing' && f < maxFrames) {
