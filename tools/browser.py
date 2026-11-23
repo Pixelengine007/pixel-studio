@@ -39,12 +39,13 @@ def launch(playwright):
     return playwright.chromium.launch(args=args)
 
 
-def open_game(browser, base_url, game, mode, seed, errors):
-    """Open games/<game>/ in bot or clip mode and wait until its API is registered."""
+def open_game(browser, base_url, game, mode, seed, errors, query=""):
+    """Open games/<game>/ in bot or clip mode and wait until its API is registered.
+    `query` adds extra URL parameters, e.g. "level=2"."""
     page = browser.new_page(viewport={"width": 360, "height": 640})
     page.on("pageerror", lambda e: errors.append(f"page error: {e}"))
     page.on("console", lambda m: errors.append(f"console {m.type}: {m.text}") if m.type == "error" else None)
-    page.goto(f"{base_url}/games/{game}/index.html?mode={mode}&seed={seed}")
+    page.goto(f"{base_url}/games/{game}/index.html?mode={mode}&seed={seed}" + (f"&{query}" if query else ""))
     page.wait_for_function("window.__studio && window.__studio.ready", timeout=20000)
     # Step until the first scene has run create() and registered its API.
     page.evaluate("""() => { let i = 0; while (!window.__studio.api && i < 120) { window.__studio.step(1); i++; } }""")

@@ -2,6 +2,18 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Shell Swap: three beaches, calibrated
+- **Three beaches instead of one level.** First Move (3 crabs, teaches the chain), Bully Beach (6 crabs, eviction, bottle cap), Rush Hour (8 crabs, waves bring a new naked crab and shells, gull every 11 s). **Why:** the first single level was beaten in 9–15 s by a greedy "drag each shell to its crab" player, which made it a basic matching task. Waves that deliver crabs and shells over time force juggling instead of a one-pass solve.
+- **Calibration (6 seeds each):** idle, spam, hold and random all lose to the first gull at about 12 s. Perfect player wins the whole campaign in 50 s, casual in 51 s, clumsy wins 67% (losses on beach 3). Real data will overrule this.
+- **Fairness fix:** on Rush Hour the wave that brings the new naked crab also brings a small shell. Without it, the casual player lost half its runs to a situation with no possible action.
+- **Stars:** finish, at least 40% of the time left, and a chain of at least 3 (beach 1) or 4 (beaches 2–3). This rewards the chain, the clip moment.
+- **Tools:** bot_test and record_clip accept `--query` (e.g. `level=2`) so one beach can be tested or clipped on its own.
+
+## 2026-11-23 — Next game: Shell Swap (hermit crab vacancy chains)
+- **What:** one beach screen, portrait. Drag empty shells; hermit crabs with their own behaviour inspect them, queue by size and swap in chains. Cramped crabs bully smaller crabs out of their shells; a naked crab is gull food; waves wash shells in and out; the sun sets (timer). Win when every crab wears a shell that fits.
+- **Why:** research round 3. Ant trails and murmurations are crowded or too close to Red Dot. Vacancy chains are real, famous, instantly readable and produce a satisfying chain reaction, the strongest clip moment so far. The core verb is new for us: placing, not luring.
+- **Applied lessons (docs/game-lessons.md):** human-like bot calibration from the start, fixed playfield (extra height = sky and sea), timer starts on tap, big readable creatures, nothing near the goal, the gull and bullies undo progress, drama on the main path (the gull's first dive and the first wave happen in every run), the clip opens on the threat.
+
 ## 2026-11-23 — Red Dot level 1: design calls after the first internal review
 - **Restless cats:** cats in the carrier climb back out after a while (Smokey 9 s, Pip 12 s, Mango 16 s, Oreo naps 40 s). **Why:** the first build was a checklist (lure, drop, next). Escapes create the juggling tension and "nooo, Smokey!" moments that a living system should produce, as the flock does in Outrun the Flock.
 - **Spread start positions:** no cat starts next to the carrier. **Why:** the first build let a perfect bot win in 15 s; two cats were basically free.

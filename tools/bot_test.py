@@ -43,6 +43,7 @@ TRIVIAL = ["idle", "spam", "hold", "random"]
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("game")
+    ap.add_argument("--query", default="", help='extra URL parameters for the game, e.g. "level=2"')
     ap.add_argument("--runs", type=int, default=10, help="runs per strategy (different seeds)")
     ap.add_argument("--max-seconds", type=float, default=120)
     ap.add_argument("--strategies", default="idle,spam,hold,random,intended")
@@ -56,7 +57,7 @@ def main():
         browser = launch(p)
         for strategy in strategies:
             for seed in range(1, args.runs + 1):
-                page = open_game(browser, base, args.game, "bot", seed, errors)
+                page = open_game(browser, base, args.game, "bot", seed, errors, args.query)
                 if page.evaluate("!!window.__studio.api"):
                     results[strategy].append(page.evaluate(EPISODE_JS, [strategy, max_frames]))
                 page.close()

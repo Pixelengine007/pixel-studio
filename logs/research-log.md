@@ -2,6 +2,15 @@
 
 Every research round: date, question, findings with sources, conclusion. Newest first.
 
+## Round 3 — 2026-11-23: next concept after Red Dot (uniqueness checks)
+
+- **Pheromone (ant trails), rank 2 in round 2:** crowded. Anthill (iOS, draw pheromone trails, well reviewed), Antopia: Idle Ant Colony (Play Store, Nov 2026), a Steam ant pheromone game and several itch.io ant-trail toys. Dropped.
+- **Murmuration (starlings), rank 3:** several jam and toy versions (Murmuration by Aava et al. 2026, Flocc, braceysmith's Murmuration for Android, Passerine GMTK 2021). Its control would also be "steer a group with your finger", too close to Red Dot. Dropped.
+- **New candidate: hermit crab vacancy chains.** Real behaviour: when a bigger empty shell appears, hermit crabs line up by size and swap shells in a chain within seconds (Scientific American; Discover Magazine; Tufts/Lewis & Rotjan, Behavioral Ecology 2010). It is a well-known nature-video moment, so it is instantly understandable.
+  - Existing games: many "play as a hermit crab" games, two sokoban-style shell puzzles on PC (What a crab, Steam; Shell Shuffle, Inbound Shovel Jam 2025, a grid conga-line push puzzle). No real-time, phone-first version where the crabs act on their own was found.
+  - Jam feedback (itch.io comment on a crab shell puzzle): fit was confusing because every shell looked the same, and players wanted instant reset. So shell sizes must be visibly different, and fit must show on the crab.
+- **Conclusion:** build "Shell Swap". New core verb (place objects instead of lure), a living system (crabs queue, swap, bully, panic), a built-in satisfying chain-reaction clip moment, and cute animals with comic behaviour (eviction fights, gull bonking a shell).
+
 ## Round 2 — 2026-11-23: which concepts fit the business plan (extended research report)
 
 Full report: "Pixel Studio Game Concepts: Which Fit the Business Plan Best" (Claude research, 23 Nov 2026). Key points:

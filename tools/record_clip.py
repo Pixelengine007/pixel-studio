@@ -51,6 +51,7 @@ BATCH_JS = """
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("game")
+    ap.add_argument("--query", default="", help='extra URL parameters for the game, e.g. "level=2"')
     ap.add_argument("--seconds", type=float, default=15)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--policy", default="intended")
@@ -69,7 +70,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp, serve_repo() as base, sync_playwright() as p:
         tmp = Path(tmp)
         browser = launch(p)
-        page = open_game(browser, base, args.game, "clip", args.seed, errors)
+        page = open_game(browser, base, args.game, "clip", args.seed, errors, args.query)
         if errors:
             sys.exit("\n".join(errors))
         skip = int(round(args.skip * 60))
