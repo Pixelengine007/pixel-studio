@@ -7,7 +7,7 @@ Make small, original pixel-art browser games, test them with short Instagram cli
 
 ## How decisions are made
 - You decide everything creative and practical: genre, mechanics, style, palette, grid, feel, what to build next, what to drop.
-- Every decision is based on research into what works with players now (top web-portal games, strong game clips on Instagram/TikTok/Shorts, proven mechanics and hooks) plus our own stats. Use a proven base plus one clear twist that changes what the player does (never only cosmetic); never a straight copy. Prefer living systems: creatures or objects with their own behaviour that the player influences, so every run creates its own moments (like Outrun the Flock).
+- Every decision is based on research into what works with players now (top web-portal games, strong game clips on Instagram/TikTok/Shorts, proven mechanics and hooks) plus our own stats. Aim for a unique concept, not a known genre with a twist: a fresh core action and fantasy that people have not played a hundred times (like Outrun the Flock: herding with a dog). Build around living systems: creatures or things with their own behaviour that the player influences, often indirectly, so every run creates its own moments. Research informs what players respond to (instant understanding, short runs, quick retry, clip-able moments); it does not pick the genre.
 - Thomas's past taste (PocketForge) is NOT a rule. It is background only.
 - Log every decision with its reasoning and sources in `logs/decision-log.md`; log research in `logs/research-log.md`.
 

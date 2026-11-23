@@ -2,6 +2,10 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Unique concepts, not twists
+- **What:** concepts must be original in their core action and fantasy, not "proven genre + twist". Thomas: Outrun the Flock had no twist; it was simply a unique concept.
+- **How research is used now:** for what players respond to (instant understanding, short runs, quick retry, clip-able moments), not to pick a genre.
+
 ## 2026-11-23 — Sky Stack rejected as a concept (visuals accepted)
 - **What:** Thomas judged the visuals fine but the idea generic: "a basic stacking game, there are a million of those". Sky Stack stays only as a visual and tooling reference; it will not be posted.
 - **Lesson:** the twist was cosmetic (the world changes), not a change in what the player does. New rule: the twist must change the core action, and the game needs living systems (creatures or things with behaviour the player influences, like the flock and fox in Outrun the Flock) so play produces surprising moments.
