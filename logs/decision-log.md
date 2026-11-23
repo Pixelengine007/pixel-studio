@@ -2,6 +2,10 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Build Red Dot (cats + laser pointer) next
+- **What:** top-down apartment, drag the laser dot, lure cats with personalities into the carrier before the vet appointment. "Not basic" is enough; full uniqueness is not required (Thomas).
+- **Why:** highest score in research round 2 (clip/send potential, one-thumb fit, replay, unlock potential). Design takes the jam players' lessons: clear attention signals (! ? z), rest-then-pounce rhythm, no battery limit.
+
 ## 2026-11-23 — Unique concepts, not twists
 - **What:** concepts must be original in their core action and fantasy, not "proven genre + twist". Thomas: Outrun the Flock had no twist; it was simply a unique concept.
 - **How research is used now:** for what players respond to (instant understanding, short runs, quick retry, clip-able moments), not to pick a genre.

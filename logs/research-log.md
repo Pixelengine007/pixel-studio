@@ -2,6 +2,17 @@
 
 Every research round: date, question, findings with sources, conclusion. Newest first.
 
+## Round 2 — 2026-11-23: which concepts fit the business plan (extended research report)
+
+Full report: "Pixel Studio Game Concepts: Which Fit the Business Plan Best" (Claude research, 23 Nov 2026). Key points:
+- Instagram ranks on watch time, likes and sends per reach; sends matter most for reaching non-followers (Adam Mosseri, Jan 2025). Design for clips people watch to the end and DM to a friend: cute animals, comic behaviour, chaos.
+- Solo-dev precedents: Sledding Game (cute animals + physics chaos, top Instagram clip 2.3M views, 80k wishlists in week one); The Hive (one idea per post, gameplay over mood).
+- Free-to-unlock conversion measured between 0.67% and ~5.5% for small games; price around EUR 3–5; players pay for more of a loop they love (modes, creatures, endless/daily). Direct web sales are undocumented: measure from day one; Android is the likely main revenue path for a hit (GUNCHO model).
+- Poki: about half of players on phones; portrait recommended; ~3 minute loops, instant retry, goal visible on the first screen; originality matters for curation.
+- Lighthouse, duckling, dandelion and turtle concepts are crowded on itch.io (many AI-assisted). Ranking: Red Dot (cats + laser) 26/30, Pheromone (ant trails) 25, Murmuration (starlings vs falcon) 24, Crow Watch 23, Duck Mother 22.
+
+Uniqueness check (23 Nov): "herding cats with a laser pointer" exists as several small jam games (Laser Kittens, Cat Herder GGJ 2024, Herding Cats LD44, Wranglecrunk GMTK 2021) and a small Steam puzzle game "Cat Herder", but no polished phone-first version was found. Jam players' feedback: cats wander off too much and attention is hard to read; real cats pounce when the dot rests, then follow; laser battery limits felt frustrating.
+
 ## Round 1 — 2026-11-23: what works now, grid, style, first five concepts
 
 ### Findings

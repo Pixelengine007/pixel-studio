@@ -192,7 +192,7 @@
   };
   function bindInput(scene) {
     if (fixed) return; // bot and clip modes are driven by the tools only
-    scene.input.on('pointerdown', (p) => { input.down = true; input._tap = true; input.x = p.x; input.y = p.y; unlockAudio(); });
+    scene.input.on('pointerdown', (p) => { input.down = true; input._tap = true; input.touch = !!p.wasTouch; input.x = p.x; input.y = p.y; unlockAudio(); });
     scene.input.on('pointermove', (p) => { input.x = p.x; input.y = p.y; });
     scene.input.on('pointerup', () => { input.down = false; });
     const k = scene.input.keyboard;
