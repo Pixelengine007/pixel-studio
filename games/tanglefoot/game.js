@@ -19,15 +19,23 @@
     { t: 53, x: 180, big: 1 }, { t: 55, x: 90 }, { t: 55.5, x: 270 },
   ];
 
-  S.defineSfx('step', [{ type: 'sine', f0: 70, f1: 40, at: 0, dur: 0.16, vol: 0.2 }]);
+  S.defineSfx('step', [{ type: 'sine', f0: 74, f1: 38, at: 0, dur: 0.2, vol: 0.24 }, { type: 'noise', at: 0, dur: 0.07, vol: 0.05 }]);
   S.defineSfx('catch', [{ type: 'triangle', f0: 520, f1: 780, at: 0, dur: 0.08, vol: 0.14 }, { type: 'triangle', f0: 780, f1: 1040, at: 0.08, dur: 0.1, vol: 0.12 }]);
   S.defineSfx('tight', [{ type: 'square', f0: 140, f1: 260, at: 0, dur: 0.14, vol: 0.07 }]);
   S.defineSfx('slip', [{ type: 'sine', f0: 500, f1: 200, at: 0, dur: 0.18, vol: 0.08 }]);
-  S.defineSfx('crash', [{ type: 'noise', at: 0, dur: 0.5, vol: 0.3 }, { type: 'sine', f0: 90, f1: 30, at: 0, dur: 0.6, vol: 0.4 }]);
+  S.defineSfx('crash', [{ type: 'noise', at: 0, dur: 0.6, vol: 0.3 }, { type: 'sine', f0: 90, f1: 28, at: 0, dur: 0.7, vol: 0.42 }, { type: 'triangle', f0: 60, f1: 30, at: 0.09, dur: 0.5, vol: 0.2 }, { type: 'noise', at: 0.12, dur: 0.5, vol: 0.1 }]);
   S.defineSfx('squash', [{ type: 'square', f0: 300, f1: 80, at: 0, dur: 0.2, vol: 0.14 }]);
   S.defineSfx('combo', [660, 880, 1100].map((f, i) => ({ type: 'triangle', f0: f, f1: f, at: i * 0.07, dur: 0.14, vol: 0.12 })));
   S.defineSfx('lamp', [{ type: 'sawtooth', f0: 300, f1: 90, at: 0, dur: 0.5, vol: 0.12 }]);
   S.defineSfx('dawn', [523, 659, 784, 1047].map((f, i) => ({ type: 'sine', f0: f, f1: f, at: i * 0.14, dur: 0.5, vol: 0.12 })));
+
+  S.defineSfx('pop', [{ type: 'sine', f0: 660, f1: 990, at: 0, dur: 0.07, vol: 0.08 }]);
+  S.defineSfx('glass', [{ type: 'noise', at: 0, dur: 0.25, vol: 0.14 }, { type: 'square', f0: 1800, f1: 600, at: 0, dur: 0.2, vol: 0.05 }]);
+  // the music: an original prowling tune in A minor pentatonic, plucked, with a drum that joins in as the field fills up
+  S.defineSfx('pluck', [{ type: 'triangle', f0: 440, f1: 438, at: 0, dur: 0.3, vol: 0.05 }, { type: 'sine', f0: 880, f1: 880, at: 0, dur: 0.1, vol: 0.012 }]);
+  S.defineSfx('bassn', [{ type: 'triangle', f0: 110, f1: 110, at: 0, dur: 0.55, vol: 0.085 }]);
+  S.defineSfx('drum', [{ type: 'sine', f0: 96, f1: 48, at: 0, dur: 0.14, vol: 0.09 }]);
+  S.defineSfx('cricket', [0, 0.05, 0.1].map((at) => ({ type: 'square', f0: 4200, f1: 4000, at, dur: 0.025, vol: 0.006 })));
 
   let current = null;
 
@@ -49,6 +57,9 @@
       this.giants = []; this.next = 0; this.gid = 0;
       this.down = 0; this.hits = 0; this.score = 0; this.combo = 0; this.lastDownT = -9; this.bestCombo = 1;
       this.shake = 0; this.stick = null; this.msg = null;
+      // feel: hit-stop, particles, footprints, score pop-ups, fades, music. Their randomness has its own generator so it can never change a run.
+      this.fx = S.rng(S.seed * 7 + 3); this.parts = []; this.prints = []; this.pops = []; this.freeze = 0; this.fadeIn = 0.5; this.leaving = -1; this.dustT = 0;
+      this.musicT = 0.3; this.musicStep = 0; this.firstRing = false; this.firstDown = false; this.tipT = 0; this.moved = false; this.through = 0; this.pull = false; this.showStick = !S.fixed; this.stickNow = null;
       this.registerTools();
       S.bindInput(this);
       // keyboard: arrow keys or WASD to run (the page needs one click first so it listens to the keys)
@@ -79,21 +90,30 @@
     update(time, delta) {
       const dt = Math.min(delta / 1000, 1 / 30), P = this.p;
       S.input.update();
-      this.t += dt; this.shake = Math.max(0, this.shake - dt * 14);
+      if (this.freeze > 0) { this.freeze -= dt; return; }          // hit-stop: the world holds still for a beat on a big hit
+      this.t += dt; this.shake = Math.max(0, this.shake - dt * 14); this.fadeIn = Math.max(0, this.fadeIn - dt);
+      this.updateFx(dt); this.music(dt);
       if (this.msg && (this.msg.t -= dt) <= 0) this.msg = null;
-      if (this.state === 'title') { if (S.input.pressed || (this.keys && this.keys.ENTER.isDown)) { this.state = 'playing'; S.sfx('catch'); } return; }
+      if (this.state === 'title') { if (this.fadeIn <= 0 && (S.input.pressed || (this.keys && this.keys.ENTER.isDown))) { this.state = 'playing'; S.sfx('catch'); } return; }
       this.pt += this.state === 'playing' ? dt : 0;
-      if (this.state !== 'playing') { this.endT += dt; this.giants.forEach((g) => this.updateGiant(g, dt)); if (this.endT > 1.2 && (S.input.pressed || (this.keys && this.keys.ENTER.isDown))) this.scene.restart(); return; }
+      if (this.state !== 'playing') {
+        this.endT += dt; this.giants.forEach((g) => this.updateGiant(g, dt));
+        if (this.leaving >= 0) { this.leaving -= dt; if (this.leaving < 0) this.scene.restart(); }
+        else if (this.endT > 1.8 && (S.input.pressed || (this.keys && this.keys.ENTER.isDown))) this.leaving = 0.25;
+        return;
+      }
+      if (this.tipT > 0) this.tipT -= dt;
       // floating stick: where the thumb lands is the centre
       let wx = 0, wy = 0;
       const K = this.keys, touching = S.fixed ? S.input.down : this.input.activePointer.isDown;
       if (touching && !this.stick) this.stick = { x: S.input.x / RES, y: S.input.y / RES };
       if (!touching) this.stick = null;
-      if (this.stick) { const dx = S.input.x / RES - this.stick.x, dy = S.input.y / RES - this.stick.y, d = Math.hypot(dx, dy); if (d > 4) { const k = Math.min(1, d / 34) / d; wx = dx * k; wy = dy * k; } }
+      this.stickNow = null;
+      if (this.stick) { const dx = S.input.x / RES - this.stick.x, dy = S.input.y / RES - this.stick.y, d = Math.hypot(dx, dy); if (d > 4) { const k = Math.min(1, d / 34) / d; wx = dx * k; wy = dy * k; } this.stickNow = { x: this.stick.x + wx * 30, y: this.stick.y + wy * 30 }; }
       if (K) { const kx = (K.RIGHT.isDown || K.D.isDown ? 1 : 0) - (K.LEFT.isDown || K.A.isDown ? 1 : 0), ky = (K.DOWN.isDown || K.S.isDown ? 1 : 0) - (K.UP.isDown || K.W.isDown ? 1 : 0); if (kx || ky) { const n = Math.hypot(kx, ky); wx = kx / n; wy = ky / n; } }
       P.wx = wx; P.wy = wy;
       if (P.stun > 0) P.stun -= dt;
-      else { const ox = P.x, oy = P.y; P.x = clamp(P.x + wx * SPEED * dt, 8, 352); P.y = clamp(P.y + wy * SPEED * dt, 60, this.H - 70); this.moving = Math.hypot(P.x - ox, P.y - oy) > 0.2; if (this.moving) this.dragTrail(); }
+      else { const ox = P.x, oy = P.y; P.x = clamp(P.x + wx * SPEED * dt, 8, 352); P.y = clamp(P.y + wy * SPEED * dt, 60, this.H - 70); this.moving = Math.hypot(P.x - ox, P.y - oy) > 0.2; if (this.moving) { this.dragTrail(); this.moved = true; this.dustT -= dt; if (this.dustT <= 0) { this.dustT = 0.14; this.parts.push({ kind: 'dust', x: P.x, y: P.y, z: 0, vx: -wx * 14, vy: -wy * 14, vz: 5, r: 2.4, life: 0, max: 0.32 }); } } }
       while (this.next < NIGHT.length && NIGHT[this.next].t <= this.pt) this.spawn(NIGHT[this.next++]);
       this.giants.forEach((g) => this.updateGiant(g, dt));
       this.giants = this.giants.filter((g) => !g.gone);
@@ -115,18 +135,20 @@
 
     updateGiant(g, dt) {
       const P = this.p;
+      if (g.land > 0) g.land -= dt;
       if (g.state === 'walk') {
         g.st += dt / (g.chase ? 0.6 : g.big ? 0.9 : 0.74);
         const f = g.feet[g.foot], k = Math.min(1, g.st), e = k * k * (3 - 2 * k);
         f.x = g.fromX + (g.landX - g.fromX) * e; f.y = g.fromY + (g.landY - g.fromY) * e;
         if (g.st >= 1) {
           g.st = 0; g.foot = 1 - g.foot;
-          if (f.y > 0) { S.sfx('step', 0.9 + this.rand() * 0.2); this.shake = Math.max(this.shake, 1.2); }
+          g.land = 0.2;
+          if (f.y > 0) { S.sfx('step', (g.big ? 0.72 : 0.92) + this.fx() * 0.2); this.shake = Math.max(this.shake, g.big ? 2.4 : 1.4); this.prints.push({ x: f.x, y: f.y, big: g.big, a: 0 }); this.dust(f.x, f.y, g.big ? 15 : 12, 5, 0.6); }
           if (this.state === 'playing' && P.stun <= 0 && Math.hypot(P.x - f.x, P.y - f.y) < (g.big ? 31 : 26)) this.squash(f);
           this.aim(g);
         }
         g.x = (g.feet[0].x + g.feet[1].x) / 2; g.y = (g.feet[0].y + g.feet[1].y) / 2;
-        if (g.y > this.H - 96 && this.state === 'playing') { g.gone = true; this.unhook(g); this.lampOut('A GIANT GOT THROUGH'); }
+        if (g.y > this.H - 96 && this.state === 'playing') { g.gone = true; this.through += 1; this.unhook(g); this.lampOut('A GIANT GOT THROUGH'); }
       } else if (g.state === 'lean') {          // the rope is tight: a short beat before it goes over
         g.ft += dt; if (g.ft > 0.16) { g.state = 'fall'; g.ft = 0; }
       } else if (g.state === 'fall') {
@@ -134,8 +156,13 @@
         if (g.ft >= 0.38) {
           g.state = 'down'; g.ft = 0; this.shake = 7; S.sfx('crash'); this.down += 1;
           this.combo = this.t - this.lastDownT < 1.3 ? this.combo + 1 : 1; this.lastDownT = this.t;
-          this.score += 10 * this.combo * this.combo; this.bestCombo = Math.max(this.bestCombo, this.combo);
-          if (this.combo > 1) { this.say(`${this.combo} WITH ONE PULL!`, '#ffd23a'); S.sfx('combo', 1 + (this.combo - 2) * 0.2); }
+          const pts = 10 * this.combo * this.combo, bx = g.x + g.dir.x * 62, by = g.y + g.dir.y * 62;
+          this.score += pts; this.bestCombo = Math.max(this.bestCombo, this.combo);
+          this.dust(bx, by, 36, 16, 1.2); this.dust(g.x + g.dir.x * 110, g.y + g.dir.y * 110, 16, 6, 1); this.chips(bx, by, 12);
+          this.pop(bx, by, `+${pts}`, '#ffd23a', this.combo > 1 ? 3 : 2);
+          if (this.combo > 1) { this.pop(bx, by - 34, `${this.combo} IN ONE PULL!`, '#fff1b0', 2); S.sfx('combo', 1 + (this.combo - 2) * 0.2); }
+          this.freeze = Math.min(0.2, 0.07 + 0.04 * this.combo);
+          if (!this.firstDown) { this.firstDown = true; this.tipT = 9; }
           const hit = (q) => { const rx = q.x - g.x, ry = q.y - g.y, along = rx * g.dir.x + ry * g.dir.y, side = Math.abs(rx * g.dir.y - ry * g.dir.x); return along > 10 && along < 150 && side < 36; };
           this.giants.forEach((o) => { if (o !== g && o.state === 'walk' && hit(o)) this.topple(o, g.dir); });
           if (this.state === 'playing' && g.y + g.dir.y * 140 > this.H - 58) this.lampOut('IT FELL ON THE HOUSES');
@@ -143,17 +170,45 @@
       } else if (g.state === 'down') { g.ft += dt; if (g.ft > 3.2) g.gone = true; }
     }
 
-    lampOut(str) { this.hits += 1; this.shake = 5; S.sfx('lamp'); this.say(str, '#ff7a6a'); }
-    topple(g, dir) { g.state = 'lean'; g.ft = 0; g.dir = { x: dir.x, y: dir.y }; this.unhook(g); }
+    lampOut(str) {
+      const lx = [78, 181, 284][clamp(LAMPS - 1 - this.hits, 0, 2)];
+      this.hits += 1; this.shake = 6; S.sfx('lamp'); S.sfx('glass'); this.say(str, '#ff7a6a');
+      for (let i = 0; i < 14; i++) { const a = this.fx() * TAU; this.parts.push({ kind: 'spark', col: 'fire', x: lx, y: this.H - 8, z: 34, vx: Math.cos(a) * (30 + this.fx() * 50), vy: Math.sin(a) * 12, vz: 40 + this.fx() * 80, g: 300, life: 0, max: 0.6 + this.fx() * 0.3 }); }
+    }
+    topple(g, dir) { g.state = 'lean'; g.ft = 0; g.dir = { x: dir.x, y: dir.y }; this.unhook(g); this.freeze = Math.max(this.freeze, 0.05); }
     unhook(c) { c.rings = 0; c.lap = 0; this.chain = this.chain.filter((q) => q !== c); }
     letGo() { this.chain.forEach((c) => { c.rings = 0; c.lap = 0; }); this.chain = []; this.trail = []; this.slipT = 0; this.tight = false; }
     squash(from) {
       const P = this.p, dx = P.x - from.x, dy = P.y - from.y, d = Math.hypot(dx, dy) || 1;
       P.stun = 0.9; P.x = clamp(P.x + dx / d * 26, 8, 352); P.y = clamp(P.y + dy / d * 26, 60, this.H - 70);
       this.pegs().forEach((c) => { c.lap = 0; c.lastAng = null; }); this.trail = [];
-      this.shake = Math.max(this.shake, 4); S.sfx('squash'); this.say('SQUASHED', '#ff7a6a');
+      this.shake = Math.max(this.shake, 4); S.sfx('squash'); this.pop(P.x, P.y + 20, 'OUCH!', '#ff7a6a', 2); this.dust(from.x, from.y, 14, 6, 0.8); this.freeze = 0.06;
     }
-    say(str, col) { this.msg = { str, col, t: 1.5 }; }
+    say(str, col) { this.msg = { str, col, t: 1.8 }; }
+    pop(x, y, str, col, k) { this.pops.push({ x, y, str, col, k, t: 0 }); }
+    dust(x, y, spread, n, power) { for (let i = 0; i < n; i++) { const a = this.fx() * TAU, v = (16 + this.fx() * 26) * power; this.parts.push({ kind: 'dust', x: x + Math.cos(a) * spread * 0.7, y: y + Math.sin(a) * spread * 0.7, z: 0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vz: 5 + this.fx() * 9, r: (2.5 + this.fx() * 3) * (0.8 + power * 0.4), life: 0, max: 0.4 + this.fx() * 0.35 }); } }
+    chips(x, y, n) { for (let i = 0; i < n; i++) { const a = this.fx() * TAU, v = 30 + this.fx() * 70; this.parts.push({ kind: 'chip', x, y, z: 4, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vz: 70 + this.fx() * 110, g: 420, life: 0, max: 0.7 + this.fx() * 0.4 }); } }
+    sparks(x, y, n, col) { for (let i = 0; i < n; i++) { const a = i / n * TAU; this.parts.push({ kind: 'spark', col, x: x + Math.cos(a) * 14, y: y + Math.sin(a) * 14, z: 6, vx: Math.cos(a) * 70, vy: Math.sin(a) * 70, vz: 20, g: 0, life: 0, max: 0.32 }); } }
+    updateFx(dt) {
+      this.parts.forEach((p) => { p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; if (p.g) { p.vz -= p.g * dt; if (p.z < 0) { p.z = 0; p.vz = -p.vz * 0.35; p.vx *= 0.5; p.vy *= 0.5; } } else { const k = Math.max(0, 1 - 4 * dt); p.vx *= k; p.vy *= k; } });
+      this.parts = this.parts.filter((p) => p.life < p.max);
+      this.prints.forEach((q) => { q.a += dt; }); this.prints = this.prints.filter((q) => q.a < 7);
+      this.pops.forEach((q) => { q.t += dt; }); this.pops = this.pops.filter((q) => q.t < 1.2);
+    }
+    music(dt) {
+      if (this.state === 'won' || this.state === 'lost') return;
+      this.musicT -= dt; if (this.musicT > 0) return;
+      this.musicT += 0.27;
+      const n = this.musicStep++, A = 220, sc = [1, 6 / 5, 4 / 3, 3 / 2, 9 / 5, 2, 12 / 5, 8 / 3], title = this.state === 'title';
+      const busy = this.giants.filter((g) => g.state === 'walk' && g.y > 0).length, root = sc[[0, 0, 2, 3, 0, 0, 4, 3][(n >> 3) % 8]];
+      if (n % 16 === 5 || n % 16 === 13) S.sfx('cricket');
+      if (n % 8 === 0) S.sfx('bassn', root);
+      if (title) { const m = [0, -1, -1, 3, -1, -1, 2, -1, 0, -1, -1, 4, -1, 3, -1, -1][n % 16]; if (m >= 0) S.sfx('pluck', A * sc[m] / 440); return; }
+      if (n % 8 === 4) S.sfx('bassn', root * 1.5);
+      const m = [0, -1, 3, -1, 4, 3, 2, -1, 0, -1, 2, 3, 2, -1, -1, -1, 5, -1, 4, 3, 4, -1, 2, -1, 3, 2, 0, 2, 0, -1, -1, -1][n % 32];
+      if (m >= 0) S.sfx('pluck', A * sc[m] / 440);
+      if (busy >= 2 && n % 4 === 2) S.sfx('drum'); if (busy >= 4 && n % 4 === 0) S.sfx('drum', 0.8);
+    }
 
     // ---------- rings: every full lap round a giant's legs (or a tree) catches the rope on it ----------
     updateRings() {
@@ -168,9 +223,10 @@
           c.lap = 0; c.rings += 1; this.trail = [];
           const held = this.chain[this.chain.length - 1];
           if (c.kind === 'tree' && held && held.kind === 'tree' && held !== c) {       // tree to tree: a tripwire
-            this.wires.push({ a: held, b: c }); this.letGo(); c.rings = 0; S.sfx('catch', 1.6); this.say('TRIPWIRE SET', '#ffd23a'); return;
+            this.wires.push({ a: held, b: c }); this.sparks(held.x, held.y, 8, 'gold'); this.sparks(c.x, c.y, 8, 'gold'); this.letGo(); c.rings = 0; S.sfx('catch', 1.6); this.say('TRIPWIRE SET', '#ffd23a'); return;
           }
           if (!this.chain.includes(c)) this.chain.push(c);
+          this.sparks(c.x, c.y, 10, 'gold'); if (c.kind === 'giant') this.firstRing = true;
           S.sfx('catch', 1 + (c.rings - 1) * 0.25 + (this.chain.length - 1) * 0.12);
           if (c.kind === 'giant' && c.rings < c.need) this.say('ONE MORE RING', '#ffd23a');
         }
@@ -180,7 +236,7 @@
     // ---------- the rope: tight between you and the last thing it is caught on ----------
     updateRope(dt) {
       const P = this.p, ch = this.chain;
-      this.tight = false;
+      this.tight = false; this.pull = false;
       // a giant tied to a tree trips by itself when it walks too far from the tree
       for (let i = 0; i + 1 < ch.length; i++) {
         const a = ch[i], b = ch[i + 1];
@@ -198,7 +254,7 @@
       const dx = P.x - last.x, dy = P.y - last.y, d = Math.hypot(dx, dy) || 1, leash = last.kind === 'tree' ? TREE_LEASH : LEASH + (last.big ? 10 : 0);
       if (d < leash) { this.slipT = 0; return; }
       this.tight = true;
-      const pulling = P.stun <= 0 && (P.wx * dx + P.wy * dy) / d > 0.2;
+      const pulling = P.stun <= 0 && (P.wx * dx + P.wy * dy) / d > 0.2; this.pull = pulling;
       if (last.kind === 'giant' && last.rings >= last.need && pulling) {
         // the pull: this giant's legs go from under it and it falls away from you; every giant tied behind it goes too
         S.sfx('tight');

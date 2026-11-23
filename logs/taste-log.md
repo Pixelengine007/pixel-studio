@@ -24,3 +24,4 @@
 - What the accepted ones share: you are a character on a mission, something hunts or threatens you, and the ending pays off. Two of them turn on baiting an attacker into a mistake (the owl's swoop hits the beam; Brambleguard's feint into the stump).
 
 | 24 Nov 2026 | Tanglefoot first look (art) | Rejected the art | "i dont have the feeling the graphics arte the same as the previous game" | Reference stays Night Ferry / River Run: painted night scene with depth, not a flat field |
+| 24 Nov 2026 | Tanglefoot look 2 | Not there yet | "The game needs to feel and look more professional" | Weight, feedback, sound and interface count as much as the drawing |
