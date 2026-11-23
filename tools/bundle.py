@@ -2,6 +2,7 @@
 
 Usage:  python tools/bundle.py <game-folder> [--out dist/<game>.html]
 The file works offline: double-click it on a computer, or send it to a phone and open it in the browser.
+With --cdn, Phaser loads from jsDelivr instead of being inlined (for hosted web pages; needs internet).
 """
 import argparse
 import re
@@ -14,17 +15,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("game")
     ap.add_argument("--out")
+    ap.add_argument("--cdn", action="store_true", help="load Phaser from jsDelivr instead of inlining it")
     a = ap.parse_args()
     game_dir = REPO / "games" / a.game
     html = (game_dir / "index.html").read_text()
 
     def inline(match):
+        if a.cdn and "vendor/phaser-" in match.group(1):
+            version = re.search(r"phaser-([0-9.]+)\.min\.js", match.group(1)).group(1)
+            return f'<script src="https://cdn.jsdelivr.net/npm/phaser@{version}/dist/phaser.min.js"></script>'
         src = (game_dir / match.group(1)).resolve()
         code = src.read_text().replace("</script>", "<\\/script>")
         return f"<script>\n{code}\n</script>"
 
     html = re.sub(r'<script src="([^"]+)"></script>', inline, html)
-    out = Path(a.out) if a.out else REPO / "dist" / f"{a.game}.html"
+    out = Path(a.out) if a.out else REPO / "dist" / (f"{a.game}-web.html" if a.cdn else f"{a.game}.html")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html)
     print(f"Bundle: {out} ({out.stat().st_size // 1024} KB)")
