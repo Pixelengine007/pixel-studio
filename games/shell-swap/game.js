@@ -107,7 +107,8 @@
       this.obstacles = OBSTACLES.map((o) => { this.add.image(o.x, o.y, o.key).setOrigin(0).setDepth(o.box.y + o.box.h); return o.box; });
       this.seaG = this.add.graphics().setDepth(-900);
       this.fxG = this.add.graphics().setDepth(4400);
-      this.light = this.add.rectangle(0, -extra, W, 320 + extra, 0xffffff, 1).setOrigin(0).setDepth(5500).setBlendMode(Phaser.BlendModes.MULTIPLY);
+      // sunset light: a plain see-through warm tint (blend modes are not reliable in every browser)
+      this.light = this.add.rectangle(0, -extra, W, 320 + extra, 0xff9a50, 0).setOrigin(0).setDepth(5500);
       this.vignette();
 
       // shells
@@ -345,13 +346,11 @@
     }
 
     updateLight() {
-      // the afternoon turns to sunset: a warm multiply tint that deepens with time
+      // the afternoon turns to sunset across the three beaches: a warm tint that deepens with time
       const k = clamp((this.levelIdx + this.playT / this.L.time) / LEVELS.length, 0, 1);
       const lerp = (a, b, t) => Math.round(a + (b - a) * t);
-      let r, g, b;
-      if (k < 0.55) { const t = k / 0.55; r = 255; g = lerp(255, 236, t); b = lerp(255, 206, t); }
-      else { const t = (k - 0.55) / 0.45; r = lerp(255, 250, t); g = lerp(236, 170, t); b = lerp(206, 150, t); }
-      this.light.setFillStyle((r << 16) | (g << 8) | b, 1);
+      const r = 255, g = lerp(170, 110, k), b = lerp(80, 70, k);
+      this.light.setFillStyle((r << 16) | (g << 8) | b, 0.04 + k * 0.2);
     }
 
     // ---------- dragging shells ----------

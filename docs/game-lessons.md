@@ -22,3 +22,8 @@ Read before starting a new game. Newest game first; each lesson says what to do 
 10. **Test real play mode on a touch viewport before calling it done.** The title-timer bug and the tall-phone layout only showed there.
 11. **Dragged things sit above the thumb** (about 20 px) so the finger never hides them.
 12. **Different core verb each game.** Red Dot is "drag a lure". The next game should use a different action so the studio does not repeat itself.
+
+## From the first phone test (Nov 2026)
+
+1. **No Phaser blend modes.** Shell Swap's MULTIPLY sunset worked in our headless Chrome but rendered as a solid white sheet on Thomas's browser. Use plain alpha tints for light and mood.
+2. **Deliver games as links, not files.** Phone file previews often show HTML without running scripts. Publish a web page (`tools/bundle.py --cdn`) or use GitHub Pages.
