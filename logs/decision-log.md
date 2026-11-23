@@ -2,6 +2,10 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Samples define technique, not characters or vibe
+- **What:** Thomas: the style samples were only for the art style, not for the characters or mood. Night Ferry gets its own protagonist; Wren is no longer a house hero.
+- **Also:** lowering the resolution (painterly pixel art at 240 px wide) looked cheaper to Thomas. "More pixel-like control" must not mean lower resolution.
+
 ## 2026-11-23 — Art direction: hand-painted 2D (Thomas's choice)
 - **What:** after five rounds of samples (pixel, flat, ink, 3D looks, genre tests), Thomas chose hand-painted 2D (direction B in `out/2d-directions.png`). The pixel-grid rules are retired; CLAUDE.md updated.
 - **Lessons from the sample rounds:** samples that share a scene, palette and lighting read as "the same" even when the rendering changes; real art directions differ in shape language, character design, palette and light. Test every direction across genres (fighting, horror, racing, chill) before asking for a choice.
