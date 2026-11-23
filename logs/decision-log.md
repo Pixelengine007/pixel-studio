@@ -136,3 +136,9 @@ Every decision: date, what, why, sources. Newest first.
 - Thomas: "now you are using ideas from the internet, you have to think of them youreself". He is right about round 3: three of the five started from existing games, which I even gave as the "proof of hours".
 - Decision: ideas start from real life and my own thinking; never from an existing game. The web is only used afterwards to check whether the idea exists. Proof for the hours test must come from real life or from Thomas's own play, not from another game.
 - Round 4: eight own ideas; four dropped because they already exist; three pitched (false trail, wolf net, your feet are your sword). Sources in research-log round 7.
+
+## 2026-11-23 — "Sounds fun to do" becomes the first gate; real life no longer required; round 5 pitched
+- Thomas: "it does not have to exist in the nature, the the activity should sound fun to do."
+- My read: round 4 was clever, not fun: thinking games rather than doing games.
+- Decision: fantasy is allowed; the first gate is whether the activity sounds fun in one short sentence; the hours test no longer asks for real-life proof.
+- Round 5 pitched: tie up giants with a rope, ride a war boar, throw and recall a hammer, dig under the enemy. Fire bending dropped (exists). Sources in research-log round 8.

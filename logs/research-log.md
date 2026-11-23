@@ -11,6 +11,22 @@ Every research round: date, question, findings with sources, conclusion. Newest 
   - Jam feedback (itch.io comment on a crab shell puzzle): fit was confusing because every shell looked the same, and players wanted instant reset. So shell sizes must be visibly different, and fit must show on the crab.
 - **Conclusion:** build "Shell Swap". New core verb (place objects instead of lure), a living system (crabs queue, swap, bully, panic), a built-in satisfying chain-reaction clip moment, and cute animals with comic behaviour (eviction fights, gull bonking a shell).
 
+## Round 8 — 2026-11-23: ideas that sound fun to do (fantasy allowed), checked afterwards
+
+New first gate: say the activity in one short sentence; it must sound fun. Five own ideas, then one search each.
+
+| # | Idea | What the check found | Verdict |
+|---|---|---|---|
+| 1 | Tie up giants with a rope: run rings round their legs until they topple | A desktop-only browser game from this month, [Giantfall](https://www.crazygames.com/game/giantfall) (grappling hooks, tie legs, wrap a giant by circling; rated 9.6); simple phone games where you shoot a rope arrow and pull ([Tangle Giants](https://apps.apple.com/us/app/tangle-giants/id1625280174)) | Pitched, with this said plainly; no phone game where you run the rope round yourself |
+| 2 | Ride a war boar: charge through goblin lines and send them flying | A PC game where you are a boar that charges and bites ([Steam](https://store.steampowered.com/app/5108020/)); small jam games about ramming | Pitched |
+| 3 | Throw your hammer and call it back through the enemies | Several small PC and jam games ([Recall Grounds](https://stillbenja.itch.io/recall-grounds), Mjölnir, Loop Axe); a simple phone game where thrown hammers return (HAMMEROK) | Pitched, flagged |
+| 4 | Dig under the enemy and make the ground swallow them | Digging is a crowded family (Digfender / CastleMine on phones: dig the path for tower defence; King Arthur's Gold on PC: undermine castles) | Pitched, flagged as the least new |
+| 5 | Bend fire: pull flames from torches and paint walls of fire | A polished phone game already has you throw fireballs and draw firewalls (Monster Burner) | Dropped |
+
+Lesson: an activity that sounds fun at first hearing has almost always been tried by someone. Realistic aim: our own take, on phones, in our art, with our own twist; not an idea nobody has had.
+
+My pick: 1 and 2.
+
 ## Round 7 — 2026-11-23: own ideas first, web check afterwards
 
 Method (new rule): eight ideas thought up from real life, without searching. Only then one search each to see whether it already exists.
