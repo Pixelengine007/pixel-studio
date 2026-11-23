@@ -2,6 +2,12 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Night Ferry built (HD pixel art), first playable link
+- **Look:** after "B but more pixel-like": HD pixel art at 360 x 640 with pixel lighting, no dithering (Thomas: the dither read as a grey filter), no lower resolution (looked cheap). Canvas is 360 px wide and scaled up with crisp pixels; clips are 3x = 1080 x 1920.
+- **Character and mood (Thomas skipped the question, my call):** a sleepy toad boatman in a straw hat, the boat's heavy counterweight; cosy-funny night with light suspense from the Deep One.
+- **Design calls from testing:** the lantern first pulled spirits toward the toad, which made the boat balance itself (every bot won 5/5); now it only calms nearby spirits. Spirits that fall can only climb back when the boat is level, and a spirit in the water draws the Deep One. Toad weight 1.6 (spirits 4.4 total), so a bad cluster cannot be fixed by position alone. Tilt capped (0.42 target, 0.48 hard; shown at 75%) after a phone test showed the boat almost capsizing; spirits cling for 0.7 s at the edge before falling, to give beginners reaction time.
+- **Bot calibration (5 seeds):** idle/spam/hold/random lose in 7–19 s; intended 4.8/5 spirits, casual 4.4, clumsy 3.4 with 20% losses.
+
 ## 2026-11-23 — Samples define technique, not characters or vibe
 - **What:** Thomas: the style samples were only for the art style, not for the characters or mood. Night Ferry gets its own protagonist; Wren is no longer a house hero.
 - **Also:** lowering the resolution (painterly pixel art at 240 px wide) looked cheaper to Thomas. "More pixel-like control" must not mean lower resolution.
