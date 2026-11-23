@@ -2,6 +2,10 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Art direction: hand-painted 2D (Thomas's choice)
+- **What:** after five rounds of samples (pixel, flat, ink, 3D looks, genre tests), Thomas chose hand-painted 2D (direction B in `out/2d-directions.png`). The pixel-grid rules are retired; CLAUDE.md updated.
+- **Lessons from the sample rounds:** samples that share a scene, palette and lighting read as "the same" even when the rendering changes; real art directions differ in shape language, character design, palette and light. Test every direction across genres (fighting, horror, racing, chill) before asking for a choice.
+
 ## 2026-11-23 — Thomas approves game concepts from now on
 - **What:** Thomas did not like the Shell Swap idea. New rule: before building a game, pitch several different concepts; build only the approved one. Shell Swap stays in the repo but is parked (not posted).
 
