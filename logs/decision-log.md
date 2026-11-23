@@ -154,3 +154,10 @@ Every decision: date, what, why, sources. Newest first.
 - Rope model: wraps use up rope, the loose end is reeled in first, and 0.75 turns in total hold by friction (below that the rope slips).
 - Checked: a test bot that only runs rings brings giants down and also gets stamped on, so blind circling is punished; on a phone-sized screen with touch it runs at about 60 fps without errors. Not checked and not claimed: whether it is fun. That is Thomas's call after a minute of play.
 - Not a game yet: no bot test for trivial strategies, no goal, nothing posted. Link is private to Thomas.
+
+## 2026-11-23 — Grey toy 2: one clear rule for bringing a giant down
+- Thomas on toy 1: "fun, game play, but not very easy or logical in making them fall".
+- My diagnosis of toy 1: three different ways to fall (two rings, one ring plus pull, tripwire), a rope that could slip without showing it, rings that only started counting once the rope happened to touch, a delay between "enough rope" and the fall, and a giant that fell on top of you.
+- Toy 2: one rule. Run a full ring round the legs (the lap shows as a growing arc, the caught rope as a band); then run away: when the rope goes tight the legs are pulled from under it and it falls away from you. A dashed circle shows how far to run and a faint shape shows where it will land. Big giants need two rings; too few and the rope slips off after a short pull, with a message. Ring a second giant before pulling and both fall; a giant tied to a tree trips itself.
+- Kept on purpose: the stamping feet and the full ring under them. I did not make it easier by removing the danger, only by making cause and effect readable.
+- Checked: test bot 5 giants down in 34 s (was 5 in 45 s) and still stamped on once; phone-sized screen with touch, about 60 fps, no errors. Same link, new version.
