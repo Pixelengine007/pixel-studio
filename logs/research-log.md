@@ -11,6 +11,22 @@ Every research round: date, question, findings with sources, conclusion. Newest 
   - Jam feedback (itch.io comment on a crab shell puzzle): fit was confusing because every shell looked the same, and players wanted instant reset. So shell sizes must be visibly different, and fit must show on the crab.
 - **Conclusion:** build "Shell Swap". New core verb (place objects instead of lure), a living system (crabs queue, swap, bully, panic), a built-in satisfying chain-reaction clip moment, and cute animals with comic behaviour (eviction fights, gull bonking a shell).
 
+## Round 6 — 2026-11-23: third idea round (the hours test)
+
+Thomas: the activity itself must be fun for a long time; a single trick is not. Depth in design terms: the space of meaningful choices that opens up as the player gets better ([Game Developer: What is depth](https://www.gamedeveloper.com/game-platforms/what-is-depth-and-how-do-you-add-it-to-your-game-)); a low skill floor with a high skill ceiling ([Game Design Skills](https://gamedesignskills.com/gaming/skill-ceiling-skill-floor/)). New test question 10: name the proof that people do this activity for hours.
+
+| # | Idea | Proof of hours | Existing phone versions found | My doubt |
+|---|---|---|---|---|
+| 1 | Heavy sword: your weapon is too heavy to swing, so you swing it by how you run | [Hammerfight](https://www.wikipedia.org/wiki/Hammerfight) (2009, PC) is a whole game built on swinging a weapon with inertia by moving in circles; a jam player on a flail game: mastering it "felt really good" | Knight Brawl and Cloud Knights (side view, buttons, flailing); no top-down one-thumb version found | With one thumb for both moving and swinging it may feel wild at first |
+| 2 | Trap house: you cannot fight; intruders chase you, so your route decides which of your traps they hit | Tecmo's Deception series (four main games): no attacks, lure enemies into trap combos ([review](https://godisageek.com/2014/03/deception-iv-blood-ties-review/)) | CD2: Trapmaster (deck-building tower defence), Lure (2020 arcade), Drake n Trap; none where you are the bait in a trap room | More parts are needed before it is fun; the toy takes longer to build |
+| 3 | Thin ice: skate to crack the ice, wolves fall through | Nitrome's Thin Ice had 20 levels on this | none found | Close to Snake |
+| 4 | Night flight: Night Moth rebuilt for phones (fold to dive, open to turn, an owl hunts you) | Thomas liked the flying in the first trial (review 0135) | flight games exist; none with this hunter | Needs level content to stay fresh |
+| 5 | Outrun the Flock for phones | Real sheepdog trials are a sport; Thomas played it for weeks | Sheepdog World and simulators; no known hit | Not new for him |
+
+Dropped: lantern tower defence (crowded: Glowkeep on CrazyGames Oct 2026, Underdark: Defense on phones, many jam games), a Pikmin-style band of helpers (too big for a first toy), sandcastle against the tide (same family as the rejected lava hose).
+
+My pick: 1 and 2.
+
 ## Round 5 — 2026-11-23: second idea round (hero on a mission, a threat, an ending)
 
 Round 4's five ideas were all rejected. Thomas's earlier verdicts in the project (see taste log) show what was missing, so two questions were added to the interest test (mission + threat + ending; level one of a bigger game).

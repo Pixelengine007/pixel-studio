@@ -9,6 +9,8 @@
 | 23 Nov 2026 | Idea system (interest test + toy first) | Approved, one change | "all good, only like the game does not need a flock or other qreaturs" | Creatures are optional; the fresh action matters |
 | 23 Nov 2026 | Graphics of Night Ferry and River Run | Liked | "I did like the graphics of previous games so we can keep that" | Keep the HD pixel look and engine |
 | 23 Nov 2026 | Idea round 1: lava hose, harbour tug, trolley snake, timber, long ladder | All rejected | "better, but i still dont like the concepts" | Chores with no enemy, no stakes and no ending read as minigames |
+| 23 Nov 2026 | Idea round 2: bait the beast, don't look away, thin ice, candle thief, Flock for phones | Not chosen; bait questioned | "more focus on the fact that the activity what you are doing is fun enough to do for a while, does baiting a dragon sounds fun for hours long?" | He judges the activity, not the moment: a trick is not enough, it must be a skill that stays fun for hours |
+| 23 Nov 2026 | Question: which activity for hours? | All four ticked: moving with skill, leading a group, fighting enemies, building and defending. Session shape: either | (multiple choice) | The type of activity does not matter; its depth does |
 
 ## Pattern from PocketForge verdicts (project reviews 0054, 0056, 0058, 0067, 0104, 0134, 0142), added 23 Nov 2026
 - Accepted or chosen: Brambleguard (forest hero fights thorn creatures, boss, the forest is restored), Stormlift Rescue (storm helicopter, winch rescue), Stormwall Bastion (liked, kept for later), Outrun the Flock (dog brings sheep home, fox threat, homecoming), Night Moth (moth escapes an owl; chosen from horror concepts; liked the flying).

@@ -125,3 +125,9 @@ Every decision: date, what, why, sources. Newest first.
 - Diagnosis from his own earlier verdicts (project reviews 0056, 0058, 0067, 0134, 0142): he accepts games where you are a character on a mission with a threat and an ending, and rejects "simple app minigames". Round 1 was five chores with no enemy.
 - Decision: interest test questions 8 (mission, threat, ending) and 9 (level one of a bigger game). Scope per prototype stays one room and 1–3 minutes.
 - Round 2 pitched: bait the beast, don't look away, thin ice, candle thief, Outrun the Flock for phones. Sources in research-log round 5.
+
+## 2026-11-23 — The hours test (question 10); idea round 3 pitched
+- Thomas: "more focus on the fact that the activity what you are doing is fun enough to do for a while, does baiting a dragon sounds fun for hours long?" My answer: no; it is a trick, not an activity.
+- Decision: interest test question 10, the hours test (a skill with a visible gap between beginner and expert, plus named proof that people do it for hours). It weighs most.
+- Asked which activities he could do for hours: he ticked all four types and "either" for session shape, so depth decides, not type.
+- Round 3 pitched: heavy sword, trap house, thin ice, night flight, Outrun the Flock for phones. Sources in research-log round 6.
