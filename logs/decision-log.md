@@ -2,6 +2,9 @@
 
 Every decision: date, what, why, sources. Newest first.
 
+## 2026-11-23 — Thomas approves game concepts from now on
+- **What:** Thomas did not like the Shell Swap idea. New rule: before building a game, pitch several different concepts; build only the approved one. Shell Swap stays in the repo but is parked (not posted).
+
 ## 2026-11-23 — Shell Swap: three beaches, calibrated
 - **Three beaches instead of one level.** First Move (3 crabs, teaches the chain), Bully Beach (6 crabs, eviction, bottle cap), Rush Hour (8 crabs, waves bring a new naked crab and shells, gull every 11 s). **Why:** the first single level was beaten in 9–15 s by a greedy "drag each shell to its crab" player, which made it a basic matching task. Waves that deliver crabs and shells over time force juggling instead of a one-pass solve.
 - **Calibration (6 seeds each):** idle, spam, hold and random all lose to the first gull at about 12 s. Perfect player wins the whole campaign in 50 s, casual in 51 s, clumsy wins 67% (losses on beach 3). Real data will overrule this.
