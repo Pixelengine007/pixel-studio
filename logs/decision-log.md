@@ -142,3 +142,9 @@ Every decision: date, what, why, sources. Newest first.
 - My read: round 4 was clever, not fun: thinking games rather than doing games.
 - Decision: fantasy is allowed; the first gate is whether the activity sounds fun in one short sentence; the hours test no longer asks for real-life proof.
 - Round 5 pitched: tie up giants with a rope, ride a war boar, throw and recall a hammer, dig under the enemy. Fire bending dropped (exists). Sources in research-log round 8.
+
+## 2026-11-23 — Stop pitching lists; my own pick goes straight to a grey-box toy
+- Thomas: "you need to be more self thinking and not go fully what i say ... Be more kritsch and dont take everything to extreme/literal."
+- My own read of the evening: (1) I turned every remark into a rule and swung each round to it; (2) his remarks point at one thing: the doing must be fun, stay fun and feel like a real game; (3) one-sentence pitches cannot show fun, which PocketForge already showed (reviews 0054–0058) and tonight repeated.
+- Decisions: idea rules cut from ten questions to four; real/fantasy and creatures are explicitly not criteria; I choose the idea and build a grey-box toy; Thomas approves a game by playing its toy (his approval of every game stays).
+- First toy: "rope and giants" (tie up giants by running a rope round their legs). Why: physical doing, danger grows with reward, room for skill (trees as anchors, dropping giants on each other). Known: a similar desktop-only browser game exists (Giantfall, Nov 2026); no phone version found.
