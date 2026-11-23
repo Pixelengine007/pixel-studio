@@ -78,3 +78,9 @@ Every decision: date, what, why, sources. Newest first.
 ## 2026-11-23 — Phaser, portrait, small scope
 - **What:** Phaser browser games, portrait orientation, one core action per prototype.
 - **Why:** PocketForge's Godot web builds took 19–22 s to start (review 0049); Instagram traffic is phone-first; small scopes were the only PocketForge successes.
+
+## 2026-11-23 — Night Ferry quality pass 1: composition and art
+- What: boat and characters about 35% bigger (deck 100 → 132 px half-width, spirits r 13–19), so they fill the screen width. New renderer (pixel.js v2): 12-band sky with moonlit clouds, a far village with lit windows, moon path and stern-lantern reflections, moonlight shafts under water, lily pads, foreground reeds, a detailed toad (warts, belly folds, big mouth, domed eyes with sleepy/worried lids, woven straw hat), squashy spirits with tails, cheeks and blinks, a planked hull with gunwale, nails, bow post, a rope coil and bucket, and a Deep One with a slit-pupil eye and tentacles. The sunken part of a tilted hull reads as a dark shape under the water. A 5×7 pixel font with an outline, and a HUD panel with a boat-and-gate progress line and spirit faces. The toad is drawn in front of the spirits so the player character always reads.
+- Why: Thomas: "the game is very cheap, every aspect can be better". The old frame left the boat small in the middle with empty sky and water, and the characters were simple blobs.
+- Balance: the bigger boat put spirits that fell overboard at the screen edge, which made the game harder (intended 3.8/5). Overboard offset 28 → 20 and lost line −60 → −50. Bot test: idle/spam/hold/random lose; intended 100% (3.9), casual 100% (4.2), clumsy 100% (3.6).
+- Next: pass 2 (animation, feedback, sound), then the clip and republish.

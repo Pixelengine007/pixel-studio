@@ -6,14 +6,14 @@
   'use strict';
   const S = window.Studio;
   const RES = 1; // one canvas pixel per game pixel; the page scales it up with crisp pixels
-  const WATER = 352, BX = 180, DECK = 100, SPEED = 26, TRIP = 1950, WREN_W = 1.6;
+  const WATER = 392, BX = 180, DECK = 132, SPEED = 26, TRIP = 1950, WREN_W = 1.6;
 
   const SPIRITS = [
-    { name: 'Mote', w: 0.6, r: 10, curious: 0.95, fear: 0.6, col: { body: '#bff6ff', edge: '#5ac8e8', glow: 'rgba(120,230,255,A)' } },
-    { name: 'Bloom', w: 0.9, r: 11.5, curious: 0.55, fear: 0.8, col: { body: '#ffd6e6', edge: '#e87aa8', glow: 'rgba(255,150,200,A)' } },
-    { name: 'Old Moss', w: 1.4, r: 14.5, curious: 0.15, fear: 0.25, col: { body: '#d8f5c8', edge: '#6aae6a', glow: 'rgba(160,240,150,A)' } },
-    { name: 'Dusk', w: 0.8, r: 10.5, curious: 0.6, fear: 1.0, col: { body: '#e4dcff', edge: '#8a7ad8', glow: 'rgba(180,160,255,A)' } },
-    { name: 'Glim', w: 0.7, r: 10, curious: 0.85, fear: 0.45, col: { body: '#fff2c0', edge: '#e8b040', glow: 'rgba(255,220,120,A)' } },
+    { name: 'Mote', w: 0.6, r: 13, curious: 0.95, fear: 0.6, col: { body: '#bff6ff', edge: '#5ac8e8', glow: 'rgba(120,230,255,A)' } },
+    { name: 'Bloom', w: 0.9, r: 15, curious: 0.55, fear: 0.8, col: { body: '#ffd6e6', edge: '#e87aa8', glow: 'rgba(255,150,200,A)' } },
+    { name: 'Old Moss', w: 1.4, r: 19, curious: 0.15, fear: 0.25, col: { body: '#d8f5c8', edge: '#6aae6a', glow: 'rgba(160,240,150,A)' } },
+    { name: 'Dusk', w: 0.8, r: 14, curious: 0.6, fear: 1.0, col: { body: '#e4dcff', edge: '#8a7ad8', glow: 'rgba(180,160,255,A)' } },
+    { name: 'Glim', w: 0.7, r: 13, curious: 0.85, fear: 0.45, col: { body: '#fff2c0', edge: '#e8b040', glow: 'rgba(255,220,120,A)' } },
   ];
 
   // sounds (synthesized, original)
@@ -95,7 +95,7 @@
     surf(x) { return WATER + 2.5 * Math.sin(x * 0.035 + this.t * 1.4) + 1.5 * Math.sin(x * 0.09 - this.t * 1.1); }
     boatOrigin() { return [BX, this.surf(BX) + 2]; }
     get viewTheta() { return this.theta * 0.75; } // the picture leans a little less than the physics
-    deckPoint(u, dy = -12) { const [ox, oy] = this.boatOrigin(), c = Math.cos(this.viewTheta), s = Math.sin(this.viewTheta), x = u * DECK; return [ox + c * x - s * dy, oy + s * x + c * dy]; }
+    deckPoint(u, dy = -16) { const [ox, oy] = this.boatOrigin(), c = Math.cos(this.viewTheta), s = Math.sin(this.viewTheta), x = u * DECK; return [ox + c * x - s * dy, oy + s * x + c * dy]; }
 
     // ---------- per frame ----------
     update(time, delta) {
@@ -108,12 +108,12 @@
       this.playT += dt; this.hintT -= dt;
       this.dist += SPEED * dt;
       // Wren follows the finger along the deck; touching raises the lantern
-      this.lantern = S.input.down;
+      this.lantern = S.input.down; this.toadV = 0;
       if (S.input.down) {
         const lx = S.input.x / RES;
         const target = clamp((lx - BX) / DECK, -0.95, 0.95);
         const step = clamp(target - this.uw, -1.25 * dt, 1.25 * dt);
-        this.uw += step; this.wrenStep += Math.abs(step) * 9;
+        this.uw += step; this.wrenStep += Math.abs(step) * 9; this.toadV = step / Math.max(dt, 1e-4);
       }
       this.runEvents(dt);
       this.spirits.forEach((s) => this.updateSpirit(s, dt));
@@ -131,7 +131,7 @@
         if (e.kind === 'fireflies' || e.kind === 'fish') {
           this.interest = { kind: e.kind, side: e.side, t: e.kind === 'fish' ? 2.6 : 4.5 };
           this.spirits.forEach((s) => { s.interest = s.state === 'deck' && this.rand() < s.curious ? this.interest.t : 0; });
-          if (e.kind === 'fireflies') for (let i = 0; i < 9; i++) this.fireflies.push({ x: BX + e.side * (120 + this.rand() * 50), y: 250 + this.rand() * 60, ph: this.rand() * 6, life: 5 });
+          if (e.kind === 'fireflies') for (let i = 0; i < 9; i++) this.fireflies.push({ x: BX + e.side * (120 + this.rand() * 50), y: 270 + this.rand() * 70, ph: this.rand() * 6, life: 5 });
           else { this.fish = { x: BX + e.side * 150, t: 0, side: e.side }; S.sfx('fish'); }
         } else if (e.kind === 'deep' && this.deep.phase === 'off') {
           Object.assign(this.deep, { phase: 'warn', t: 0, side: e.side, y: 700, eye: 0 });
@@ -173,7 +173,7 @@
         const d = this.deep;
         if ((d.phase === 'rise' || d.phase === 'hold') && Math.abs(s.wx - (BX + d.side * 120)) < 150 && s.waterT > 1.1) { s.state = 'grab'; s.waterT = 0; S.sfx('gulp'); this.popup(s.wx, s.wy - 26, 'GONE…'); }
         else if (Math.abs(s.wx - ex) < 12 && Math.abs(this.theta) < 0.16) { s.state = 'deck'; s.u = side * 0.92; s.panicT = 0; s.interest = 0; S.sfx('climb', 1.1); this.splash(s.wx, this.surf(s.wx), 4); }
-        else if (s.wx < -60 || s.waterT > 9) { s.state = 'grab'; s.waterT = 0; }
+        else if (s.wx < -50 || s.waterT > 9) { s.state = 'grab'; s.waterT = 0; }
       } else if (s.state === 'grab') {
         s.waterT += dt; s.wy += dt * 60; s.wx -= SPEED * dt;
         if (s.waterT > 1) { s.state = 'lost'; this.lost += 1; }
@@ -182,7 +182,7 @@
 
     overboard(s) {
       const [x, y] = this.deckPoint(Math.sign(s.u) * 1.05);
-      s.state = 'water'; s.wx = x + Math.sign(s.u) * 28; s.wy = y; s.waterT = 0;
+      s.state = 'water'; s.wx = x + Math.sign(s.u) * 20; s.wy = y; s.waterT = 0;
       this.splash(s.wx, this.surf(s.wx), 10); S.sfx('splash'); S.sfx('plip', 1.4);
       this.popup(s.wx, y - 30, `${s.name.toUpperCase()}!`);
     }
