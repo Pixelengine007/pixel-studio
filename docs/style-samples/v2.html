@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pixel Studio — four art directions</title>
+<style>
+  body { margin: 0; background: #111014; color: #efe9df; font-family: Inter, sans-serif; }
+  .row { display: flex; gap: 28px; padding: 28px; width: max-content; }
+  .cell { display: flex; flex-direction: column; gap: 10px; width: 360px; }
+  .cell h2 { margin: 0; font: 800 22px Inter; letter-spacing: -0.3px; }
+  .cell p { margin: 0; font-size: 13.5px; line-height: 1.4; opacity: .72; }
+  .frame { position: relative; width: 360px; height: 640px; border-radius: 12px; overflow: hidden; }
+  .frame canvas { position: absolute; inset: 0; width: 360px; height: 640px; display: block; }
+  .ui { position: absolute; inset: 0; pointer-events: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
+</head>
+<body>
+<div class="row">
+  <div class="cell"><h2>1 — Silhouette dusk</h2><div class="frame"><canvas id="c1"></canvas></div>
+    <p>Black shapes against glowing, layered skies, with fog and light rays. Moody and cinematic (Limbo, Badland, Alto). Very cheap to animate and always looks expensive.</p></div>
+  <div class="cell"><h2>2 — Low-poly 3D</h2><div class="frame"><canvas id="c2"></canvas><div class="ui" id="ui2"></div></div>
+    <p>Real 3D built from flat-shaded triangles, with soft shadows and a toy-diorama feel (Monument Valley, Townscaper). The camera can move, which is great for clips.</p></div>
+  <div class="cell"><h2>3 — Neon glow</h2><div class="frame"><canvas id="c3"></canvas></div>
+    <p>Glowing lines on deep night colours: arcade energy, high contrast, pops out of an Instagram feed (Geometry Wars, Tron, synthwave).</p></div>
+  <div class="cell"><h2>4 — Papercraft</h2><div class="frame"><canvas id="c4"></canvas></div>
+    <p>Cut-paper layers with real paper grain and shadows between the layers. Warm, handmade, cozy (Tearaway, Paper Mario).</p></div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+
+const DPR = 2;
+function setup(id) {
+  const c = document.getElementById(id); c.width = 360 * DPR; c.height = 640 * DPR;
+  const ctx = c.getContext('2d'); ctx.scale(DPR, DPR); return ctx;
+}
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function hash(x, s) { const v = Math.sin(x * 127.1 + s * 311.7) * 43758.5453; return v - Math.floor(v); }
+function noise1(x, s) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i, s) * (1 - u) + hash(i + 1, s) * u; }
+function fbm(x, s) { return noise1(x, s) * 0.6 + noise1(x * 2.3, s + 7) * 0.28 + noise1(x * 5.1, s + 13) * 0.12; }
+
+// A trotting fox, side view facing right, in a 150 x 75 box. Shared by three of the styles.
+const FOX = new Path2D('M8 38 C14 24 40 18 58 30 C72 26 96 26 108 29 L113 16 L117 4 L122 15 L127 3 L130 17 C134 21 141 25 150 29 L148 33 C140 36 130 38 123 41 C119 45 117 51 116 56 L119 73 L113 73 L109 59 L104 73 L98 73 L100 57 C90 59 76 59 67 57 L65 73 L59 73 L57 59 L51 73 L45 73 L49 53 C40 53 28 51 19 48 C12 46 8 43 8 38 Z');
+const FOX_TIP = new Path2D('M8 38 C9 33 13 28 19 26 C20 32 21 40 20 48 C13 46 8 43 8 38 Z');
+const FOX_CHEST = new Path2D('M123 41 C130 39 138 37 146 33 L148 33 C140 37 131 40 125 44 C121 48 119 52 118 56 L116 56 C117 51 119 45 123 41 Z');
+const FOX_BELLY = new Path2D('M67 57 C76 59 90 59 100 57 L100 54 C90 56 76 56 68 54 Z');
+function foxAt(ctx, x, y, s, flip) { ctx.translate(x, y); ctx.scale(flip ? -s : s, s); }
+
+// ============ 1. SILHOUETTE DUSK ============
+(function silhouette() {
+  const ctx = setup('c1');
+  const sky = ctx.createLinearGradient(0, 0, 0, 470);
+  [[0, '#081526'], [0.35, '#173a52'], [0.62, '#8b4a5a'], [0.82, '#e07e4f'], [1, '#ffc27a']].forEach(([t, c]) => sky.addColorStop(t, c));
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 360, 640);
+  const r = rng(3);
+  for (let i = 0; i < 90; i++) { const y = r() * 220; ctx.fillStyle = `rgba(255,240,220,${0.15 + r() * 0.6 * (1 - y / 220)})`; ctx.fillRect(r() * 360, y, r() < 0.1 ? 1.6 : 1, r() < 0.1 ? 1.6 : 1); }
+  // the sun: big, low, glowing
+  const sx = 238, sy = 372;
+  let g = ctx.createRadialGradient(sx, sy, 10, sx, sy, 260);
+  g.addColorStop(0, 'rgba(255,220,160,0.9)'); g.addColorStop(0.2, 'rgba(255,170,110,0.45)'); g.addColorStop(1, 'rgba(255,120,90,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 360, 640);
+  ctx.beginPath(); ctx.arc(sx, sy, 58, 0, 7); ctx.fillStyle = '#ffe7b8'; ctx.fill();
+  // light rays
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 9; i++) {
+    const a = -Math.PI * 0.95 + i * 0.2 + (r() - 0.5) * 0.08, w = 0.035 + r() * 0.05;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + Math.cos(a - w) * 700, sy + Math.sin(a - w) * 700); ctx.lineTo(sx + Math.cos(a + w) * 700, sy + Math.sin(a + w) * 700); ctx.closePath();
+    const rg = ctx.createRadialGradient(sx, sy, 40, sx, sy, 520); rg.addColorStop(0, 'rgba(255,200,140,0.10)'); rg.addColorStop(1, 'rgba(255,200,140,0)');
+    ctx.fillStyle = rg; ctx.fill();
+  }
+  ctx.restore();
+  // layered ridges with atmospheric fog between them
+  const layers = [
+    { base: 360, amp: 70, f: 0.012, col: '#7a4d5f', seed: 1 },
+    { base: 400, amp: 50, f: 0.02, col: '#4e3248', seed: 2, pines: 0.25 },
+    { base: 445, amp: 40, f: 0.025, col: '#2c1d30', seed: 3, pines: 0.6 },
+    { base: 505, amp: 26, f: 0.03, col: '#140d18', seed: 4, pines: 0.9 },
+  ];
+  layers.forEach((L, li) => {
+    ctx.beginPath(); ctx.moveTo(0, 640);
+    const pts = [];
+    for (let x = 0; x <= 360; x += 3) { const y = L.base - fbm(x * L.f, L.seed) * L.amp; pts.push([x, y]); ctx.lineTo(x, y); }
+    ctx.lineTo(360, 640); ctx.closePath(); ctx.fillStyle = L.col; ctx.fill();
+    if (L.pines) {
+      const pr = rng(10 + li);
+      pts.forEach(([x, y], i) => {
+        if (i % 2 || pr() > L.pines * 0.6) return;
+        const h = (10 + pr() * 26) * (0.6 + li * 0.25), w = h * 0.32;
+        ctx.beginPath(); ctx.moveTo(x, y - h);
+        for (let k = 1; k <= 4; k++) { ctx.lineTo(x + w * (k / 4), y - h + (h * k) / 4.2); ctx.lineTo(x + w * (k / 4) * 0.45, y - h + (h * k) / 4.2); }
+        ctx.lineTo(x + 1.2, y + 2); ctx.lineTo(x - 1.2, y + 2);
+        for (let k = 4; k >= 1; k--) { ctx.lineTo(x - w * (k / 4) * 0.45, y - h + (h * k) / 4.2); ctx.lineTo(x - w * (k / 4), y - h + (h * k) / 4.2); }
+        ctx.closePath(); ctx.fillStyle = L.col; ctx.fill();
+      });
+    }
+    // fog band in front of this layer
+    if (li < 3) {
+      const fg = ctx.createLinearGradient(0, L.base - 20, 0, L.base + 60);
+      fg.addColorStop(0, 'rgba(255,170,130,0)'); fg.addColorStop(0.6, `rgba(240,140,120,${0.22 - li * 0.05})`); fg.addColorStop(1, 'rgba(240,140,120,0)');
+      ctx.fillStyle = fg; ctx.fillRect(0, L.base - 20, 360, 80);
+    }
+  });
+  // a rock spur reaching into the light: the fox stands on its tip, backlit by the sun
+  ctx.beginPath(); ctx.moveTo(-10, 640); ctx.lineTo(-10, 470);
+  ctx.bezierCurveTo(60, 452, 130, 438, 175, 432); ctx.bezierCurveTo(205, 428, 236, 430, 250, 436);
+  ctx.bezierCurveTo(258, 446, 252, 470, 236, 500); ctx.bezierCurveTo(220, 540, 230, 600, 250, 640); ctx.closePath();
+  ctx.fillStyle = '#07050a'; ctx.fill();
+  const gr = rng(9);
+  for (let i = 0; i < 60; i++) { // grass along the spur's top edge
+    const t = gr(), x = -10 + t * 258, base = 470 - t * 38 + (t > 0.72 ? (t - 0.72) * 30 : 0), h = 5 + gr() * 13, lean = (gr() - 0.35) * 7;
+    ctx.beginPath(); ctx.moveTo(x - 1.3, base + 3); ctx.quadraticCurveTo(x + lean * 0.3, base - h * 0.6, x + lean, base - h); ctx.quadraticCurveTo(x + lean * 0.3 + 1, base - h * 0.5, x + 1.3, base + 3); ctx.fillStyle = '#07050a'; ctx.fill();
+  }
+  // tall reeds framing the bottom right
+  for (let i = 0; i < 9; i++) {
+    const x = 290 + i * 9 + gr() * 6, h = 120 + gr() * 90, lean = (gr() - 0.5) * 30;
+    ctx.beginPath(); ctx.moveTo(x - 1.6, 645); ctx.quadraticCurveTo(x + lean * 0.4, 645 - h * 0.6, x + lean, 645 - h); ctx.quadraticCurveTo(x + lean * 0.4 + 1.4, 645 - h * 0.6, x + 1.6, 645); ctx.fill();
+    if (i % 2) { ctx.beginPath(); ctx.ellipse(x + lean, 645 - h + 8, 2.6, 10, lean * 0.01, 0, 7); ctx.fill(); }
+  }
+  // distant birds
+  ctx.strokeStyle = '#140d18'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+  [[92, 250, 7], [112, 262, 5], [70, 270, 4.5]].forEach(([x, y, w]) => { ctx.beginPath(); ctx.moveTo(x - w, y - w * 0.4); ctx.quadraticCurveTo(x - w * 0.4, y - w * 0.5, x, y); ctx.quadraticCurveTo(x + w * 0.4, y - w * 0.5, x + w, y - w * 0.4); ctx.stroke(); });
+  // the fox, with a warm rim light on its sun-facing edge
+  ctx.save(); foxAt(ctx, 118, 351, 1.0);
+  ctx.fillStyle = '#ffd09a'; ctx.fill(FOX);
+  ctx.translate(-1.4, 1.4); ctx.fillStyle = '#07050a'; ctx.fill(FOX);
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(118 + 133, 351 + 22, 1.3, 0, 7); ctx.fillStyle = '#ffe0b0'; ctx.fill();
+  // fireflies
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const fr = rng(21);
+  for (let i = 0; i < 16; i++) {
+    const x = 10 + fr() * 300, y = 450 + fr() * 170, s = 5 + fr() * 9;
+    const fg = ctx.createRadialGradient(x, y, 0, x, y, s); fg.addColorStop(0, 'rgba(255,240,170,0.95)'); fg.addColorStop(0.25, 'rgba(255,220,120,0.5)'); fg.addColorStop(1, 'rgba(255,200,100,0)');
+    ctx.fillStyle = fg; ctx.fillRect(x - s, y - s, s * 2, s * 2);
+  }
+  ctx.restore();
+  // UI: quiet and elegant
+  ctx.fillStyle = 'rgba(255,240,225,0.92)'; ctx.font = '300 34px Inter'; ctx.textAlign = 'center'; ctx.fillText('12', 180, 66);
+  ctx.font = '500 10px Inter'; ctx.fillStyle = 'rgba(255,240,225,0.6)'; ctx.fillText('F I R E F L I E S', 180, 84);
+  ctx.font = '500 11px Inter'; ctx.fillStyle = 'rgba(255,240,225,0.7)'; ctx.fillText('H O L D   T O   L E A P', 180, 620);
+})();
+
+// ============ 3. NEON GLOW ============
+(function neon() {
+  const ctx = setup('c3');
+  const bg = ctx.createLinearGradient(0, 0, 0, 640);
+  [[0, '#05030f'], [0.5, '#1b0838'], [0.58, '#3a0f4f'], [0.6, '#0a0618'], [1, '#05030f']].forEach(([t, c]) => bg.addColorStop(t, c));
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 360, 640);
+  const r = rng(5);
+  for (let i = 0; i < 120; i++) { ctx.fillStyle = `rgba(200,220,255,${r() * 0.8})`; ctx.fillRect(r() * 360, r() * 360, 1, 1); }
+  const glow = (col, blur, fn) => { ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blur; fn(); ctx.restore(); };
+  const H = 372;
+  // striped sun
+  glow('#ff3fa4', 40, () => {
+    ctx.save(); ctx.beginPath(); ctx.arc(180, H - 18, 86, Math.PI, 0); ctx.closePath(); ctx.clip();
+    const sg = ctx.createLinearGradient(0, H - 104, 0, H); sg.addColorStop(0, '#ffd34d'); sg.addColorStop(0.5, '#ff7a3d'); sg.addColorStop(1, '#ff2f8f');
+    ctx.fillStyle = sg; ctx.fillRect(90, H - 110, 180, 110);
+    ctx.fillStyle = '#1b0838';
+    for (let i = 0; i < 6; i++) { const y = H - 58 + i * 8, h = 1.5 + i * 1.1; ctx.fillRect(90, y, 180, h); }
+    ctx.restore();
+  });
+  // wireframe mountains
+  const ridge = (base, seed, step, hmax, col, w) => glow(col, 12, () => {
+    const pr = rng(seed); ctx.beginPath(); ctx.moveTo(0, base);
+    for (let x = 0; x <= 360 + step; x += step) { const peak = pr() < 0.5 ? hmax * (0.45 + pr() * 0.55) : hmax * pr() * 0.3; ctx.lineTo(x - step / 2, base - peak); ctx.lineTo(x, base - pr() * hmax * 0.15); }
+    ctx.fillStyle = '#0a0618'; ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineJoin = 'miter'; ctx.stroke();
+  });
+  ridge(H, 3, 64, 120, '#a43cff', 1.6);
+  ridge(H, 8, 40, 62, '#ff3fa4', 2);
+  // perspective grid floor
+  ctx.save(); ctx.beginPath(); ctx.rect(0, H, 360, 640 - H); ctx.clip();
+  glow('#ff3fa4', 10, () => {
+    ctx.strokeStyle = 'rgba(255,63,164,0.85)'; ctx.lineWidth = 1.3;
+    for (let i = -14; i <= 14; i++) { ctx.beginPath(); ctx.moveTo(180 + i * 9, H); ctx.lineTo(180 + i * 70, 640); ctx.stroke(); }
+    for (let k = 0; k < 16; k++) { const y = H + Math.pow(k / 15, 2.2) * (640 - H); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(360, y); ctx.globalAlpha = 0.35 + 0.65 * (k / 15); ctx.stroke(); }
+  });
+  ctx.restore();
+  glow('#38f3ff', 16, () => { ctx.fillStyle = '#9ff9ff'; ctx.fillRect(0, H - 1, 360, 2); });
+  // speed streaks behind the fox
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  [[478, 120], [492, 160], [505, 90], [520, 140]].forEach(([y, len], i) => {
+    const sg = ctx.createLinearGradient(80 - len, 0, 80, 0); sg.addColorStop(0, 'rgba(255,63,164,0)'); sg.addColorStop(1, 'rgba(255,63,164,0.85)');
+    ctx.fillStyle = sg; ctx.fillRect(80 - len, y, len, 1.6 + (i % 2));
+  });
+  ctx.restore();
+  // the fox as a glowing outline
+  ctx.save(); foxAt(ctx, 70, 452, 1.15);
+  ctx.fillStyle = 'rgba(56,243,255,0.10)'; ctx.fill(FOX);
+  ctx.shadowColor = '#38f3ff'; ctx.shadowBlur = 18; ctx.strokeStyle = '#38f3ff'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.stroke(FOX);
+  ctx.shadowBlur = 4; ctx.strokeStyle = '#e6feff'; ctx.lineWidth = 0.8; ctx.stroke(FOX);
+  ctx.beginPath(); ctx.arc(134, 22, 2.2, 0, 7); ctx.fillStyle = '#ffffff'; ctx.fill();
+  ctx.restore();
+  // reflection of the fox on the floor
+  ctx.save(); ctx.globalAlpha = 0.18; foxAt(ctx, 70, 452 + 75 * 1.15 * 2 + 6, 1.15); ctx.scale(1, -1); ctx.strokeStyle = '#38f3ff'; ctx.lineWidth = 2; ctx.stroke(FOX); ctx.restore();
+  // collectible orbs ahead
+  [[280, 470], [318, 430], [252, 410]].forEach(([x, y]) => glow('#ffd34d', 22, () => {
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fillStyle = '#fff3b0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.strokeStyle = 'rgba(255,211,77,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+  }));
+  // UI
+  glow('#38f3ff', 14, () => { ctx.font = '400 15px "DejaVu Sans Mono"'; ctx.fillStyle = '#9ff9ff'; ctx.textAlign = 'left'; ctx.fillText('SCORE', 22, 44); });
+  glow('#ff3fa4', 18, () => { ctx.font = '44px Anton'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.fillText('012', 20, 92); });
+  glow('#ffd34d', 14, () => { ctx.font = '400 13px "DejaVu Sans Mono"'; ctx.fillStyle = '#fff3b0'; ctx.textAlign = 'right'; ctx.fillText('x3 COMBO', 338, 44); });
+  glow('#38f3ff', 12, () => { ctx.font = '400 13px "DejaVu Sans Mono"'; ctx.fillStyle = '#9ff9ff'; ctx.textAlign = 'center'; ctx.fillText('[ TAP TO JUMP ]', 180, 612); });
+})();
+
+// ============ 4. PAPERCRAFT ============
+(function paper() {
+  const ctx = setup('c4');
+  // grain texture used on every paper layer
+  const grain = document.createElement('canvas'); grain.width = grain.height = 256;
+  const gx = grain.getContext('2d'), gi = gx.createImageData(256, 256), r = rng(11);
+  for (let i = 0; i < gi.data.length; i += 4) { const v = 120 + r() * 135; gi.data[i] = gi.data[i + 1] = gi.data[i + 2] = v; gi.data[i + 3] = 26; }
+  gx.putImageData(gi, 0, 0);
+  // fibres
+  gx.strokeStyle = 'rgba(90,70,50,0.06)';
+  for (let i = 0; i < 160; i++) { const x = r() * 256, y = r() * 256, a = r() * 6; gx.beginPath(); gx.moveTo(x, y); gx.lineTo(x + Math.cos(a) * 8, y + Math.sin(a) * 8); gx.stroke(); }
+  const grainPat = ctx.createPattern(grain, 'repeat');
+  const layer = (pathFn, fill, depth = 4) => {
+    ctx.save(); ctx.shadowColor = 'rgba(70,45,30,0.35)'; ctx.shadowBlur = depth * 2.2; ctx.shadowOffsetY = depth * 0.9; ctx.shadowOffsetX = depth * 0.3;
+    pathFn(); ctx.fillStyle = fill; ctx.fill(); ctx.restore();
+    ctx.save(); pathFn(); ctx.clip(); ctx.fillStyle = grainPat; ctx.fillRect(0, 0, 360, 640); ctx.restore();
+  };
+  // sky card with a soft gradient
+  const sky = ctx.createLinearGradient(0, 0, 0, 420); sky.addColorStop(0, '#9fd0e6'); sky.addColorStop(1, '#dff0e8');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 360, 640); ctx.fillStyle = grainPat; ctx.fillRect(0, 0, 360, 640);
+  // sun with paper rays
+  layer(() => { ctx.beginPath(); for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? 44 : 62; ctx.lineTo(276 + Math.cos(a) * rr, 118 + Math.sin(a) * rr); } ctx.closePath(); }, '#ffcf5a', 3);
+  layer(() => { ctx.beginPath(); ctx.arc(276, 118, 36, 0, 7); }, '#ffb547', 3);
+  // clouds
+  const cloud = (x, y, s) => layer(() => {
+    ctx.beginPath(); ctx.moveTo(x - 40 * s, y + 10 * s);
+    ctx.arc(x - 24 * s, y + 2 * s, 16 * s, Math.PI, Math.PI * 1.75); ctx.arc(x + 2 * s, y - 8 * s, 22 * s, Math.PI * 1.15, Math.PI * 1.9); ctx.arc(x + 28 * s, y + 2 * s, 15 * s, Math.PI * 1.3, 0);
+    ctx.lineTo(x + 43 * s, y + 10 * s); ctx.closePath();
+  }, '#fffdf7', 4);
+  cloud(86, 96, 1.1); cloud(200, 170, 0.75); cloud(60, 230, 0.6);
+  // hills: wavy cut edges, each layer casts a shadow on the one behind
+  const hill = (base, amp, f, s, col, depth) => layer(() => {
+    ctx.beginPath(); ctx.moveTo(-10, 650);
+    for (let x = -10; x <= 370; x += 4) { const jag = (hash(x, s) - 0.5) * 1.2; ctx.lineTo(x, base - Math.sin(x * f + s) * amp - fbm(x * 0.02, s) * amp * 0.6 + jag); }
+    ctx.lineTo(370, 650); ctx.closePath();
+  }, col, depth);
+  hill(330, 26, 0.018, 1, '#8fc3a1', 3);
+  hill(372, 22, 0.024, 4, '#6fae7c', 4);
+  // paper trees on the middle hill
+  const tree = (x, y, s, col) => {
+    layer(() => { ctx.beginPath(); ctx.rect(x - 2.5 * s, y - 4 * s, 5 * s, 22 * s); }, '#9a6a44', 3);
+    layer(() => { ctx.beginPath(); ctx.ellipse(x, y - 14 * s, 14 * s, 18 * s, 0, 0, 7); }, col, 4);
+    ctx.save(); ctx.beginPath(); ctx.ellipse(x, y - 14 * s, 14 * s, 18 * s, 0, 0, 7); ctx.clip(); ctx.fillStyle = 'rgba(30,60,40,0.16)'; ctx.fillRect(x, y - 40 * s, 30 * s, 60 * s); ctx.restore(); // folded half
+  };
+  tree(56, 352, 1.1, '#3f8f5c'); tree(84, 360, 0.8, '#58a66a'); tree(304, 340, 1.25, '#3f8f5c'); tree(330, 352, 0.85, '#58a66a');
+  hill(430, 18, 0.03, 7, '#5a9a5e', 5);
+  // a paper path
+  layer(() => { ctx.beginPath(); ctx.moveTo(196, 436); ctx.bezierCurveTo(150, 470, 250, 540, 150, 650); ctx.lineTo(250, 650); ctx.bezierCurveTo(320, 540, 200, 470, 214, 436); ctx.closePath(); }, '#f3dfb2', 2);
+  const bush = (x, y, s, col) => layer(() => { ctx.beginPath(); [[0, 0, 13], [-12, 5, 10], [12, 5, 10], [0, 8, 11]].forEach(([a, b, rr]) => { ctx.moveTo(x + a * s + rr * s, y + b * s); ctx.arc(x + a * s, y + b * s, rr * s, 0, 7); }); }, col, 4);
+  bush(40, 470, 1.2, '#3f8f5c'); bush(320, 480, 1.4, '#4c9a62'); bush(110, 455, 0.8, '#58a66a');
+  [[150, 70, 6], [170, 84, 4.5], [128, 88, 4]].forEach(([x, y, w]) => layer(() => { ctx.beginPath(); ctx.moveTo(x - w * 2, y - w); ctx.lineTo(x, y); ctx.lineTo(x + w * 2, y - w); ctx.lineTo(x, y - w * 0.3); ctx.closePath(); }, '#fffdf7', 2));
+  hill(560, 14, 0.04, 9, '#4b8a52', 6);
+  // the fox: separate paper pieces stacked, each with its own shadow
+  ctx.save(); foxAt(ctx, 60, 470, 1.4);
+  ctx.shadowColor = 'rgba(70,45,30,0.4)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#e8743a'; ctx.fill(FOX);
+  ctx.shadowBlur = 3; ctx.shadowOffsetY = 1.5;
+  ctx.fillStyle = '#fff8ee'; ctx.fill(FOX_TIP); ctx.fill(FOX_CHEST); ctx.fill(FOX_BELLY);
+  ctx.shadowColor = 'transparent';
+  ctx.save(); ctx.clip(FOX); ctx.fillStyle = 'rgba(120,40,20,0.18)'; ctx.fillRect(0, 40, 160, 40); ctx.fillStyle = grainPat; ctx.fillRect(0, 0, 160, 80); ctx.restore();
+  ctx.fillStyle = '#2a1a1a'; ctx.beginPath(); ctx.arc(133, 21, 2.2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(149, 31, 2, 0, 7); ctx.fill();
+  ctx.restore();
+  // paper flowers in the foreground
+  const flower = (x, y, col) => {
+    layer(() => { ctx.beginPath(); ctx.rect(x - 1.2, y, 2.4, 26); }, '#3f7f4a', 2);
+    layer(() => { ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; ctx.moveTo(x, y); ctx.ellipse(x + Math.cos(a) * 6, y + Math.sin(a) * 6, 5.5, 3.6, a, 0, 7); } }, col, 3);
+    layer(() => { ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 7); }, '#ffd04a', 2);
+  };
+  [[34, 590, '#ff8fa8'], [62, 604, '#fff4e8'], [300, 596, '#ff8fa8'], [326, 610, '#b99cff'], [282, 618, '#fff4e8']].forEach(([x, y, c]) => flower(x, y, c));
+  // UI: a paper tag on a string
+  ctx.save(); ctx.strokeStyle = '#8a6a4a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(34, 0); ctx.lineTo(42, 30); ctx.stroke(); ctx.restore();
+  layer(() => { ctx.beginPath(); ctx.moveTo(24, 34); ctx.lineTo(60, 26); ctx.lineTo(112, 26); ctx.lineTo(112, 68); ctx.lineTo(60, 68); ctx.lineTo(24, 60); ctx.closePath(); }, '#fff3dc', 4);
+  ctx.beginPath(); ctx.arc(40, 47, 4, 0, 7); ctx.fillStyle = '#c9b58f'; ctx.fill();
+  ctx.font = '26px "Archivo Black"'; ctx.fillStyle = '#e8743a'; ctx.textAlign = 'left'; ctx.fillText('12', 60, 58);
+  layer(() => { ctx.beginPath(); ctx.roundRect(96, 586, 168, 34, 6); }, '#fff3dc', 3);
+  ctx.font = '13px "Archivo Black"'; ctx.fillStyle = '#5a3a2a'; ctx.textAlign = 'center'; ctx.fillText('TAP TO HOP', 180, 608);
+})();
+
+// ============ 2. LOW-POLY 3D ============
+(function lowpoly() {
+  const canvas = document.getElementById('c2');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(DPR); renderer.setSize(360, 640, false);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#bfe3f2');
+  scene.fog = new THREE.Fog('#bfe3f2', 38, 80);
+  const camera = new THREE.PerspectiveCamera(32, 360 / 640, 0.1, 200);
+  camera.position.set(18, 26, 34); camera.lookAt(0, 0.5, 0);
+  scene.add(new THREE.HemisphereLight('#e8f6ff', '#6a8a5a', 1.4));
+  const sun = new THREE.DirectionalLight('#fff0d8', 2.6); sun.position.set(-14, 22, 10); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16 }); sun.shadow.bias = -0.0008;
+  scene.add(sun);
+  const flat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.9, metalness: 0, ...extra });
+  const r = rng(4);
+  // water
+  const wg = new THREE.PlaneGeometry(120, 120, 40, 40); wg.rotateX(-Math.PI / 2);
+  const wp = wg.attributes.position; for (let i = 0; i < wp.count; i++) wp.setY(i, (r() - 0.5) * 0.35);
+  wg.computeVertexNormals();
+  const water = new THREE.Mesh(wg, flat('#4fb0c6', { roughness: 0.35 })); water.position.y = -0.2; water.receiveShadow = true; scene.add(water);
+  // island terrain with vertex colours by height
+  const ig = new THREE.CircleGeometry(13, 36, 0, Math.PI * 2); ig.rotateX(-Math.PI / 2);
+  const tg = new THREE.PlaneGeometry(28, 28, 26, 26); tg.rotateX(-Math.PI / 2);
+  const tp = tg.attributes.position, colors = [];
+  const cSand = new THREE.Color('#f1d9a0'), cGrass = new THREE.Color('#7cc46a'), cGrass2 = new THREE.Color('#5fae5e'), cRock = new THREE.Color('#9a9aa8');
+  for (let i = 0; i < tp.count; i++) {
+    const x = tp.getX(i), z = tp.getZ(i), d = Math.hypot(x * 1.05, z * 1.25);
+    let h = Math.max(-1.2, (1 - d / 11.5)) * 2.4 + (r() - 0.5) * 0.35 + Math.max(0, 3.2 - Math.hypot(x + 4, z + 3)) * 0.9;
+    if (d > 12) h = -1.2;
+    tp.setY(i, h);
+    const c = h < 0.35 ? cSand : h > 3.3 ? cRock : (r() < 0.5 ? cGrass : cGrass2);
+    colors.push(c.r, c.g, c.b);
+  }
+  const tg2 = tg.toNonIndexed(); // flat colour per triangle
+  const cols = [], p2 = tg2.attributes.position;
+  for (let i = 0; i < p2.count; i += 3) {
+    const h = (p2.getY(i) + p2.getY(i + 1) + p2.getY(i + 2)) / 3;
+    const c = h < 0.3 ? cSand : h > 3.2 ? cRock : ((i / 3) % 3 === 0 ? cGrass2 : cGrass);
+    for (let k = 0; k < 3; k++) cols.push(c.r, c.g, c.b);
+  }
+  tg2.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); tg2.computeVertexNormals();
+  const terrain = new THREE.Mesh(tg2, flat('#ffffff', { vertexColors: true })); terrain.receiveShadow = true; terrain.castShadow = true; scene.add(terrain);
+  const heightAt = (x, z) => { const d = Math.hypot(x * 1.05, z * 1.25); return Math.max(-1.2, (1 - d / 11.5)) * 2.4 + Math.max(0, 3.2 - Math.hypot(x + 4, z + 3)) * 0.9; };
+  const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); return mesh; };
+  // pine trees
+  [[-6, -4], [-4, -6.5], [-7.5, -1], [5, -5], [7, -2], [3.5, -7], [-2, -8], [8, 2]].forEach(([x, z], i) => {
+    const y = heightAt(x, z), s = 0.8 + r() * 0.5;
+    add(new THREE.Mesh(new THREE.CylinderGeometry(0.18 * s, 0.25 * s, 1.2 * s, 5), flat('#7a5236')), x, y + 0.6 * s, z);
+    add(new THREE.Mesh(new THREE.ConeGeometry(1.2 * s, 2.2 * s, 6), flat(i % 2 ? '#3f8f5c' : '#4fa065')), x, y + 1.9 * s, z);
+    add(new THREE.Mesh(new THREE.ConeGeometry(0.85 * s, 1.7 * s, 6), flat(i % 2 ? '#4fa065' : '#5cb46e')), x, y + 2.9 * s, z);
+  });
+  // rocks
+  [[2, 4.5, 0.7], [-3, 5, 0.5], [6, 4, 0.9]].forEach(([x, z, s]) => add(new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), flat('#a6a2b0')), x, heightAt(x, z) + s * 0.4, z));
+  // tiny cabin
+  const cab = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.6, 1.8), flat('#f0e2c8')); body.position.y = 0.8; body.castShadow = body.receiveShadow = true; cab.add(body);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.3, 4), flat('#d2574a')); roof.position.y = 2.2; roof.rotation.y = Math.PI / 4; roof.castShadow = true; cab.add(roof);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.05), flat('#7a5236')); door.position.set(0.3, 0.45, 0.92); cab.add(door);
+  cab.position.set(-3.8, heightAt(-3.8, -2.2), -2.2); cab.rotation.y = 0.5; scene.add(cab);
+  // the fox: built from simple low-poly solids
+  const fox = new THREE.Group();
+  const orange = flat('#ec7a32'), white = flat('#fff4e4'), dark = flat('#2b1d20');
+  const part = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); m.castShadow = true; fox.add(m); return m; };
+  part(new THREE.CylinderGeometry(0.42, 0.5, 1.7, 6), orange, 0, 0.95, 0, 0, 0, Math.PI / 2);
+  part(new THREE.CylinderGeometry(0.3, 0.38, 0.9, 6), white, 0.15, 0.78, 0, 0, 0, Math.PI / 2);
+  part(new THREE.DodecahedronGeometry(0.5, 0), orange, 1.05, 1.45, 0);
+  part(new THREE.ConeGeometry(0.26, 0.6, 5), white, 1.55, 1.36, 0, 0, 0, -Math.PI / 2);
+  part(new THREE.SphereGeometry(0.08, 6, 4), dark, 1.85, 1.38, 0);
+  part(new THREE.ConeGeometry(0.17, 0.42, 4), orange, 0.95, 1.95, 0.22);
+  part(new THREE.ConeGeometry(0.17, 0.42, 4), orange, 0.95, 1.95, -0.22);
+  [[0.6, 0.25], [0.6, -0.25], [-0.6, 0.25], [-0.6, -0.25]].forEach(([x, z]) => part(new THREE.CylinderGeometry(0.1, 0.08, 0.65, 5), dark, x, 0.33, z));
+  part(new THREE.ConeGeometry(0.42, 1.5, 6), orange, -1.45, 1.15, 0, 0, 0, Math.PI / 2 + 0.35);
+  part(new THREE.ConeGeometry(0.2, 0.5, 6), white, -2.05, 1.38, 0, 0, 0, Math.PI / 2 + 0.35);
+  part(new THREE.SphereGeometry(0.06, 6, 4), dark, 1.38, 1.6, 0.33);
+  part(new THREE.SphereGeometry(0.06, 6, 4), dark, 1.38, 1.6, -0.33);
+  fox.scale.setScalar(1.6); fox.position.set(2.5, heightAt(2.5, 1.2), 1.2); fox.rotation.y = 0.45; scene.add(fox);
+  // floating low-poly clouds
+  [[-10, 6, -6, 1.3], [14, 1.5, -14, 0.8], [-16, 7, -16, 1.4]].forEach(([x, y, z, s]) => {
+    const c = new THREE.Group();
+    [[0, 0, 0, 1], [1.1, -0.1, 0.2, 0.75], [-1, -0.15, 0, 0.7]].forEach(([a, b, d, k]) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(k, 0), flat('#ffffff')); m.position.set(a, b, d); m.castShadow = true; c.add(m); });
+    c.position.set(x, y, z); c.scale.setScalar(s); scene.add(c);
+  });
+  renderer.render(scene, camera);
+  const ui = document.getElementById('ui2');
+  ui.innerHTML = `
+    <div style="position:absolute;left:18px;top:20px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.85);border-radius:16px;padding:6px 14px 6px 8px;box-shadow:0 4px 0 rgba(40,80,90,.25);font:800 20px 'DM Sans';color:#2f4a55">
+      <span style="width:22px;height:22px;border-radius:50%;background:#ec7a32;display:inline-block"></span>12</div>
+    <div style="position:absolute;right:18px;top:20px;background:#2f4a55;color:#fff;border-radius:16px;padding:7px 12px;font:700 13px 'DM Sans';box-shadow:0 4px 0 rgba(0,0,0,.2)">DAY 3</div>
+    <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:#ffffff;border-radius:22px;padding:11px 26px;font:800 15px 'DM Sans';color:#2f4a55;box-shadow:0 5px 0 rgba(40,80,90,.3)">TAP TO EXPLORE</div>`;
+})();
+document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
