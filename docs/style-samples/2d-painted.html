@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Hand-painted 2D — four genres</title><style>body{margin:0;background:#111}</style></head>
+<body>
+<script>
+'use strict';
+const W = 300, H = 533, DPR = 2;
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function hash(x, s) { const v = Math.sin(x * 127.1 + s * 311.7) * 43758.5453; return v - Math.floor(v); }
+function noise1(x, s) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i, s) * (1 - u) + hash(i + 1, s) * u; }
+function fbm(x, s) { return noise1(x, s) * 0.6 + noise1(x * 2.3, s + 7) * 0.28 + noise1(x * 5.1, s + 13) * 0.12; }
+const mk = () => { const c = document.createElement('canvas'); c.width = W * DPR; c.height = H * DPR; const x = c.getContext('2d'); x.scale(DPR, DPR); return [c, x]; };
+
+// painterly grain: soft blotches + fine speckle, laid over shapes to break up flat fills
+const GRAIN = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'); const r = rng(77);
+  for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${r() < 0.5 ? '255,255,255' : '0,0,0'},${0.02 + r() * 0.04})`; x.beginPath(); x.ellipse(r() * 256, r() * 256, 2 + r() * 10, 1 + r() * 4, r() * 3, 0, 7); x.fill(); }
+  for (let i = 0; i < 5000; i++) { x.fillStyle = `rgba(${r() < 0.5 ? '255,255,255' : '0,0,0'},0.05)`; x.fillRect(r() * 256, r() * 256, 1, 1); } return c; })();
+
+function P(ctx) {
+  const p = {
+    ctx,
+    grad(stops, y0 = 0, y1 = H) { const g = ctx.createLinearGradient(0, y0, 0, y1); stops.forEach(([t, c]) => g.addColorStop(t, c)); ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0); },
+    layer(draw, blur = 0, alpha = 1, mode) { const [c, x] = mk(); draw(x, P(x)); ctx.save(); if (blur) ctx.filter = `blur(${blur}px)`; ctx.globalAlpha = alpha; if (mode) ctx.globalCompositeOperation = mode; ctx.drawImage(c, 0, 0, W, H); ctx.restore(); },
+    smear(draw, dx, steps = 8) { const [c, x] = mk(); draw(x, P(x)); ctx.save(); for (let i = 0; i < steps; i++) { ctx.globalAlpha = 0.9 / steps * (1.6 - i / steps); ctx.drawImage(c, -dx * i / steps, 0, W, H); } ctx.restore(); },
+    glow(x, y, r, col, a = 0.7) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col.replace('A', a)); g.addColorStop(0.35, col.replace('A', a * 0.35)); g.addColorStop(1, col.replace('A', 0)); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore(); },
+    shaft(x, y, ang, w0, w1, len, col, a) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, y); ctx.rotate(ang); const g = ctx.createLinearGradient(0, 0, 0, len); g.addColorStop(0, col.replace('A', a)); g.addColorStop(1, col.replace('A', 0)); ctx.fillStyle = g; ctx.filter = 'blur(4px)'; ctx.beginPath(); ctx.moveTo(-w0 / 2, 0); ctx.lineTo(w0 / 2, 0); ctx.lineTo(w1 / 2, len); ctx.lineTo(-w1 / 2, len); ctx.fill(); ctx.restore(); },
+    fill(path, fillStyle, grain = true) { ctx.fillStyle = fillStyle; ctx.fill(path); if (grain) { ctx.save(); ctx.clip(path); ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = ctx.createPattern(GRAIN, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore(); } },
+    vgrad(y0, y1, a, b) { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; },
+    rgrad(x, y, r0, r1, a, b) { const g = ctx.createRadialGradient(x, y, r0, x, y, r1); g.addColorStop(0, a); g.addColorStop(1, b); return g; },
+    ridge(base, amp, f, seed, step = 3) { const pa = new Path2D(); pa.moveTo(-5, H + 5); for (let x = -5; x <= W + 5; x += step) pa.lineTo(x, base - fbm(x * f, seed) * amp); pa.lineTo(W + 5, H + 5); pa.closePath(); return pa; },
+    blob(cx, cy, r, seed, n = 9, wob = 0.25) { const pa = new Path2D(); for (let i = 0; i <= n * 4; i++) { const a = (i / (n * 4)) * Math.PI * 2, rr = r * (1 + (fbm(i / 4 + seed * 10, seed) - 0.5) * wob * 2); const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr; i ? pa.lineTo(x, y) : pa.moveTo(x, y); } pa.closePath(); return pa; },
+    bokeh(n, x0, y0, w, h, col, seed, rmax = 6) { const r = rng(seed); ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < n; i++) { const x = x0 + r() * w, y = y0 + r() * h, rr = 1 + r() * rmax; const g = ctx.createRadialGradient(x, y, 0, x, y, rr); g.addColorStop(0, col.replace('A', 0.6)); g.addColorStop(1, col.replace('A', 0)); ctx.fillStyle = g; ctx.fillRect(x - rr, y - rr, rr * 2, rr * 2); } ctx.restore(); },
+    tree(x, y, h, lean, seed, col) { // twisted trunk with branches
+      const r = rng(seed), pa = new Path2D();
+      const trunk = (x0, y0, len, ang, w, depth) => { const x1 = x0 + Math.cos(ang) * len, y1 = y0 + Math.sin(ang) * len, mx = (x0 + x1) / 2 + (r() - 0.5) * len * 0.3, my = (y0 + y1) / 2;
+        const nx = Math.cos(ang + Math.PI / 2), ny = Math.sin(ang + Math.PI / 2);
+        pa.moveTo(x0 + nx * w, y0 + ny * w); pa.quadraticCurveTo(mx + nx * w * 0.7, my + ny * w * 0.7, x1 + nx * w * 0.35, y1 + ny * w * 0.35); pa.lineTo(x1 - nx * w * 0.35, y1 - ny * w * 0.35); pa.quadraticCurveTo(mx - nx * w * 0.7, my - ny * w * 0.7, x0 - nx * w, y0 - ny * w); pa.closePath();
+        if (depth > 0) { const k = 2 + (r() < 0.4 ? 1 : 0); for (let i = 0; i < k; i++) trunk(x1, y1, len * (0.55 + r() * 0.2), ang + (r() - 0.5) * 1.4, w * 0.45, depth - 1); } };
+      trunk(x, y, h * 0.45, -Math.PI / 2 + lean, h * 0.05, 3);
+      return pa;
+    },
+  };
+  return p;
+}
+
+// Wren: a small cloaked wanderer with a fox-eared hood and glowing eyes. (x, y) = feet; faces right.
+function wren(p, x, y, s, o = {}) {
+  const c = p.ctx; c.save(); c.translate(x, y); c.scale(s * (o.flip ? -1 : 1), s);
+  const cloak = new Path2D('M-9 0 C-12 -8 -11 -18 -6 -24 C-3 -28 4 -28 7 -24 C11 -18 12 -8 10 0 C6 2 2 -1 0 1 C-3 -1 -6 2 -9 0 Z');
+  if (o.dash) { c.save(); c.globalAlpha = 0.25; c.translate(-8, 0); p.fill(cloak, o.cloak || '#20424e', false); c.translate(-8, 0); c.globalAlpha = 0.12; p.fill(cloak, o.cloak || '#20424e', false); c.restore(); }
+  p.fill(cloak, p.vgrad(-28, 0, o.cloakHi || '#3c6e74', o.cloak || '#173038'));
+  const hood = new Path2D('M-7 -22 C-8 -30 -6 -36 -4 -39 L-2 -34 C0 -35 2 -35 4 -34 L6 -39 C9 -35 10 -29 8 -22 C4 -19 -3 -19 -7 -22 Z');
+  p.fill(hood, p.vgrad(-39, -20, o.hoodHi || '#d9773e', o.hood || '#8a3a20'));
+  const face = new Path2D('M-4 -24 C-5 -29 -2 -32 1 -32 C4 -32 6 -29 5 -24 C3 -22 -2 -22 -4 -24 Z');
+  p.fill(face, '#0d0b12', false);
+  c.restore();
+  const ex = (dx) => x + dx * s * (o.flip ? -1 : 1), ey = y - 27.5 * s;
+  [-1.5, 2.6].forEach((dx) => { p.glow(ex(dx), ey, 5 * s, 'rgba(255,236,170,A)', 0.9); c.fillStyle = '#fff6d0'; c.beginPath(); c.ellipse(ex(dx), ey, 0.9 * s, 1.3 * s, 0, 0, 7); c.fill(); });
+  // rim light along the cloak edge
+  if (o.rim) { c.save(); c.translate(x, y); c.scale(s * (o.flip ? -1 : 1), s); c.globalCompositeOperation = 'lighter'; c.strokeStyle = o.rim; c.lineWidth = 0.9; c.filter = 'blur(0.6px)'; c.stroke(new Path2D('M10 0 C12 -8 11 -18 7 -24 M6 -39 C9 -35 10 -29 8 -22')); c.restore(); }
+}
+
+// ---------- FIGHTING: a crystal cavern, Wren dashes at an armoured beetle ----------
+function fight(p) {
+  const c = p.ctx;
+  p.grad([[0, '#0c0a1e'], [0.5, '#1c1636'], [1, '#0a0814']]);
+  p.layer((x, q) => { q.fill(q.ridge(120, 60, 0.02, 1), '#2a2450', false); }, 6, 0.9);
+  p.layer((x, q) => { q.fill(q.ridge(210, 90, 0.015, 2), '#1e1a3c', false); }, 3, 1);
+  // stalactites
+  p.layer((x, q) => { const r = rng(4); for (let i = 0; i < 14; i++) { const sx = r() * W, len = 40 + r() * 120, w = 6 + r() * 16; const pa = new Path2D(); pa.moveTo(sx - w, -5); pa.quadraticCurveTo(sx - w * 0.3, len * 0.6, sx, len); pa.quadraticCurveTo(sx + w * 0.3, len * 0.6, sx + w, -5); pa.closePath(); q.fill(pa, '#120f26'); } }, 1.5, 1);
+  // glowing crystals
+  const crystal = (x0, y0, s, ang) => { const pa = new Path2D(); pa.moveTo(x0, y0); pa.lineTo(x0 + Math.cos(ang - 0.18) * s * 0.5, y0 + Math.sin(ang - 0.18) * s * 0.5); pa.lineTo(x0 + Math.cos(ang) * s, y0 + Math.sin(ang) * s); pa.lineTo(x0 + Math.cos(ang + 0.18) * s * 0.5, y0 + Math.sin(ang + 0.18) * s * 0.5); pa.closePath(); p.fill(pa, p.vgrad(y0 - s, y0, '#c8fbff', '#3ab8d8'), false); };
+  [[40, 330, 46, -1.9], [52, 334, 30, -1.4], [28, 336, 26, -2.3], [258, 300, 40, -1.5], [272, 306, 26, -1.0], [244, 304, 22, -2.0], [150, 120, 18, -1.6]].forEach(([x, y, s, a]) => { crystal(x, y, s, a); p.glow(x + Math.cos(a) * s * 0.5, y + Math.sin(a) * s * 0.5, s * 2, 'rgba(90,220,255,A)', 0.35); });
+  // floor
+  const floor = new Path2D('M-5 540 L-5 352 C60 338 120 346 160 344 C220 342 260 334 305 340 L305 540 Z');
+  p.fill(floor, p.vgrad(336, 540, '#3a3466', '#0c0a1a'));
+  c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(140,220,255,0.35)'; c.lineWidth = 1.2; c.stroke(new Path2D('M-5 352 C60 338 120 346 160 344 C220 342 260 334 305 340')); c.restore();
+  // the beetle warden
+  const bx = 226, by = 348;
+  c.save(); c.translate(bx, by); c.scale(1.4, 1.4);
+  [[-30, 0], [-8, 2], [16, 0]].forEach(([lx]) => { const leg = new Path2D(`M${lx} -14 L${lx - 8} -2 L${lx - 12} 2 L${lx - 6} 2 L${lx - 2} -6 Z`); p.fill(leg, '#140c1a', false); });
+  const shell = new Path2D('M-52 -12 C-54 -50 -26 -78 6 -76 C36 -74 52 -50 50 -16 C30 -8 -30 -6 -52 -12 Z');
+  p.fill(shell, p.rgrad(-10, -60, 4, 80, '#5a2a52', '#1a0c1e'));
+  c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,150,60,0.9)'; c.lineWidth = 1.6; c.filter = 'blur(0.4px)';
+  c.stroke(new Path2D('M-30 -60 L-18 -44 L-24 -28 M2 -74 L-2 -52 L10 -36 L4 -18 M30 -62 L22 -44 L34 -30'));
+  c.filter = 'none'; c.globalCompositeOperation = 'source-over';
+  const head = new Path2D('M-60 -18 C-74 -20 -84 -34 -80 -44 C-74 -40 -64 -38 -54 -34 Z'); p.fill(head, '#2a1428');
+  const horn = new Path2D('M-70 -36 C-86 -52 -90 -72 -82 -88 C-80 -70 -72 -54 -60 -40 Z'); p.fill(horn, p.vgrad(-88, -36, '#7a4a6a', '#2a1428'));
+  c.restore();
+  p.glow(bx - 98, by - 42, 16, 'rgba(255,140,60,A)', 0.9); c.fillStyle = '#ffd08a'; c.beginPath(); c.arc(bx - 98, by - 42, 3, 0, 7); c.fill();
+  p.glow(bx, by - 64, 90, 'rgba(255,120,60,A)', 0.18);
+  // Wren dashes in with a crescent of light
+  wren(p, 70, 348, 2.8, { dash: true, rim: 'rgba(140,230,255,0.9)' });
+  c.save(); c.globalCompositeOperation = 'lighter'; c.filter = 'blur(1px)';
+  const arc = new Path2D(); arc.arc(92, 280, 58, -1.35, 0.55); arc.arc(99, 282, 45, 0.5, -1.25, true); arc.closePath();
+  c.fillStyle = 'rgba(190,250,255,0.85)'; c.fill(arc); c.filter = 'blur(6px)'; c.fillStyle = 'rgba(90,210,255,0.6)'; c.fill(arc); c.restore();
+  p.glow(138, 300, 44, 'rgba(255,250,230,A)', 0.8);
+  const r = rng(6); c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,230,180,0.9)'; c.lineWidth = 1.2; for (let i = 0; i < 14; i++) { const a = r() * 6.28, d0 = 8 + r() * 6, d1 = d0 + 8 + r() * 18; c.beginPath(); c.moveTo(138 + Math.cos(a) * d0, 300 + Math.sin(a) * d0); c.lineTo(138 + Math.cos(a) * d1, 300 + Math.sin(a) * d1); c.stroke(); } c.restore();
+  p.bokeh(30, 0, 60, W, 300, 'rgba(120,220,255,A)', 9, 3);
+  // UI
+  for (let i = 0; i < 5; i++) { const x = 22 + i * 18, y = 34; c.fillStyle = i < 3 ? '#e8f6ff' : 'rgba(255,255,255,0.15)'; c.beginPath(); c.ellipse(x, y, 5.5, 7.5, 0, 0, 7); c.fill(); if (i < 3) p.glow(x, y, 10, 'rgba(180,230,255,A)', 0.4); }
+  c.font = 'italic 600 15px "Crimson Text"'; c.fillStyle = '#ffd6b0'; c.textAlign = 'center'; c.fillText('The Amber Warden', W / 2, 470);
+  c.fillStyle = 'rgba(255,214,176,0.4)'; c.fillRect(70, 478, 160, 1);
+  c.fillStyle = 'rgba(40,10,20,0.8)'; c.fillRect(70, 484, 160, 5); c.fillStyle = '#ff8a4a'; c.fillRect(70, 484, 104, 5);
+}
+
+// ---------- HORROR: a drowned forest; something huge in the fog ----------
+function horror(p) {
+  const c = p.ctx;
+  p.grad([[0, '#0e1614'], [0.55, '#2a3a34'], [1, '#0a100e']]);
+  // the thing in the fog: an antlered skull face, mostly hidden
+  p.layer((x, q) => {
+    x.translate(150, 210);
+    const skull = new Path2D('M-34 -30 C-36 -60 36 -60 34 -30 C36 -6 22 10 12 28 C6 36 -6 36 -12 28 C-22 10 -36 -6 -34 -30 Z');
+    q.fill(skull, q.vgrad(-60, 36, '#c8cfc0', '#5a6658'));
+    x.fillStyle = '#060908'; x.beginPath(); x.ellipse(-14, -24, 9, 12, 0.2, 0, 7); x.ellipse(14, -24, 9, 12, -0.2, 0, 7); x.fill();
+    x.strokeStyle = '#a8b0a0'; x.lineCap = 'round';
+    [[-1], [1]].forEach(([sgn]) => { x.lineWidth = 5; x.beginPath(); x.moveTo(sgn * 26, -48); x.quadraticCurveTo(sgn * 60, -90, sgn * 48, -150); x.stroke(); x.lineWidth = 3.5; [[-70, 34, -100], [-100, 70, -118], [-120, 40, -150]].forEach(([y0, dx, y1]) => { x.beginPath(); x.moveTo(sgn * (30 + (-y0 - 48) * 0.25), y0); x.quadraticCurveTo(sgn * dx, y0 - 10, sgn * (dx + 6), y1); x.stroke(); }); });
+  }, 3.5, 0.55);
+  p.glow(136, 186, 6, 'rgba(220,255,200,A)', 0.5); p.glow(164, 186, 6, 'rgba(220,255,200,A)', 0.5);
+  // fog bands and tree layers, farther = paler and blurrier
+  const fog = (y, a) => p.layer((x) => { const g = x.createLinearGradient(0, y - 40, 0, y + 40); g.addColorStop(0, 'rgba(160,180,165,0)'); g.addColorStop(0.5, `rgba(160,180,165,${a})`); g.addColorStop(1, 'rgba(160,180,165,0)'); x.fillStyle = g; x.fillRect(0, y - 40, W, 80); }, 8);
+  fog(240, 0.35);
+  p.layer((x, q) => { [[30, 400, 300, -0.05, 1], [250, 400, 320, 0.08, 2], [110, 400, 240, 0.02, 3]].forEach(([tx, ty, h, l, s]) => q.fill(q.tree(tx, ty, h, l, s), '#3a4a44', false)); }, 4, 0.8);
+  fog(320, 0.3);
+  p.layer((x, q) => { [[-10, 470, 420, 0.1, 4], [300, 470, 440, -0.12, 5]].forEach(([tx, ty, h, l, s]) => q.fill(q.tree(tx, ty, h, l, s), '#0c1210', false)); }, 0.6, 1);
+  // black water with a broken reflection
+  p.fill(new Path2D('M-5 540 L-5 404 C80 398 220 400 305 404 L305 540 Z'), p.vgrad(400, 540, '#1a2622', '#030505'));
+  c.save(); c.globalAlpha = 0.25; c.scale(1, -1); c.translate(0, -808); c.filter = 'blur(3px)'; p.glow(150, 210, 50, 'rgba(200,220,200,A)', 0.4); c.restore();
+  c.strokeStyle = 'rgba(200,220,200,0.18)'; c.lineWidth = 1; for (let i = 0; i < 10; i++) { const y = 410 + i * 9, w = 30 + i * 8; c.beginPath(); c.moveTo(150 - w, y); c.lineTo(150 + w * 0.6, y); c.stroke(); }
+  // Wren with a lantern on a stick, wading in
+  wren(p, 92, 412, 2.1, { rim: 'rgba(255,190,110,0.7)', cloak: '#121e22', cloakHi: '#26383c' });
+  c.strokeStyle = '#2a1e16'; c.lineWidth = 2; c.beginPath(); c.moveTo(100, 378); c.lineTo(124, 352); c.stroke();
+  c.fillStyle = '#ffcf7a'; c.beginPath(); c.roundRect(120, 352, 9, 12, 3); c.fill();
+  p.glow(124, 358, 90, 'rgba(255,170,80,A)', 0.42); p.glow(124, 358, 14, 'rgba(255,240,200,A)', 0.9);
+  c.save(); c.globalAlpha = 0.5; c.filter = 'blur(2px)'; p.glow(124, 450, 20, 'rgba(255,170,80,A)', 0.5); c.restore();
+  // drifting spores
+  p.bokeh(26, 0, 120, W, 320, 'rgba(200,255,200,A)', 3, 2.5);
+  // vignette
+  c.fillStyle = p.rgrad(150, 300, 120, 360, 'rgba(0,0,0,0)', 'rgba(0,0,0,0.75)'); c.fillRect(0, 0, W, H);
+  c.font = 'italic 15px "Crimson Text"'; c.fillStyle = 'rgba(210,225,205,0.75)'; c.textAlign = 'center'; c.fillText('…it already knows your name.', W / 2, 500);
+}
+
+// ---------- RACING: a leaf-sail cart flying down an autumn hill ----------
+function race(p) {
+  const c = p.ctx;
+  p.grad([[0, '#f6b46a'], [0.45, '#f9d39a'], [1, '#fbe6c0']]);
+  p.glow(220, 120, 160, 'rgba(255,235,190,A)', 0.6);
+  p.layer((x, q) => { q.fill(q.ridge(250, 70, 0.012, 3), '#d88a5a', false); }, 5, 0.8);
+  p.layer((x, q) => { const r = rng(2); for (let i = 0; i < 16; i++) q.fill(q.blob(r() * W, 250 + r() * 30, 30 + r() * 30, i + 1, 9, 0.2), r() < 0.5 ? '#c8582e' : '#e07a36', false); }, 4, 0.9);
+  // light shafts through the canopy
+  [[40, 0.5, 30], [120, 0.5, 40], [200, 0.5, 26]].forEach(([x, a, w]) => p.shaft(x, -20, -0.35, w, w * 2.6, 520, 'rgba(255,240,200,A)', 0.22));
+  // the hill and road, tilted for speed
+  const hill = new Path2D('M-5 540 L-5 300 C80 330 200 380 305 420 L305 540 Z');
+  p.fill(hill, p.vgrad(300, 540, '#8a3a22', '#3a160e'));
+  const road = new Path2D('M-5 310 C80 340 200 388 305 428 L305 446 C200 406 80 358 -5 330 Z');
+  p.fill(road, '#c89a6a');
+  // speed-smeared bushes and leaves
+  p.smear((x, q) => { const r = rng(7); for (let i = 0; i < 10; i++) { const bx = r() * W, by = 330 + (bx / W) * 110 + 20 + r() * 40; q.fill(q.blob(bx, by, 14 + r() * 10, i, 8, 0.3), ['#a8401e', '#d0602a', '#e8963a'][i % 3], false); } }, 40, 10);
+  // the rival close behind, then Wren in the lead
+  const cart = (x, y, ang, s, cloth, rider) => {
+    c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
+    p.fill(new Path2D('M-24 -6 L22 -6 C26 -6 28 -2 26 2 L-22 2 C-26 2 -27 -4 -24 -6 Z'), p.vgrad(-6, 2, '#a8683e', '#5a2e18'));
+    [[-15], [15]].forEach(([wx]) => { c.fillStyle = '#2a1410'; c.beginPath(); c.arc(wx, 4, 6, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,220,180,0.5)'; c.lineWidth = 1; c.beginPath(); c.arc(wx, 4, 4, 0.5, 2.4); c.stroke(); });
+    c.strokeStyle = '#3a2016'; c.lineWidth = 2; c.beginPath(); c.moveTo(-6, -6); c.lineTo(-10, -44); c.stroke();
+    p.fill(new Path2D('M-10 -44 C8 -40 18 -26 14 -10 C4 -14 -4 -16 -9 -12 Z'), p.vgrad(-44, -10, cloth[0], cloth[1]));
+    c.strokeStyle = 'rgba(0,0,0,0.25)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-9, -40); c.quadraticCurveTo(4, -30, 13, -12); c.stroke();
+    c.restore();
+    rider(x + Math.cos(ang) * 4 * s, y - 6 * s);
+  };
+  cart(70, 334, 0.32, 0.9, ['#7a9a5a', '#3a5a2a'], (x, y) => { const g = new Path2D(); g.ellipse(x, y - 8, 8, 10, 0, 0, 7); p.fill(g, p.vgrad(y - 18, y, '#8a7a6a', '#4a3a30')); c.fillStyle = '#f0d0c0'; c.beginPath(); c.ellipse(x + 7, y - 9, 3, 2, 0, 0, 7); c.fill(); });
+  cart(176, 386, 0.32, 1.25, ['#ffd27a', '#e0782a'], (x, y) => wren(p, x, y, 1.15, { rim: 'rgba(255,240,200,0.9)' }));
+  // dust kicked up and streaks
+  p.smear((x) => { x.fillStyle = 'rgba(240,210,170,0.6)'; for (let i = 0; i < 6; i++) { x.beginPath(); x.ellipse(140 - i * 14, 412 - i * 3, 8 + i * 2, 4 + i, 0, 0, 7); x.fill(); } }, 30, 6);
+  c.save(); c.strokeStyle = 'rgba(255,250,235,0.7)'; c.lineWidth = 1.2; const r = rng(3); for (let i = 0; i < 16; i++) { const y = 120 + r() * 300, x0 = r() * W; c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 - 30 - r() * 40, y - 10); c.stroke(); } c.restore();
+  // falling leaves in front, blurred
+  p.layer((x) => { const rr = rng(8); for (let i = 0; i < 14; i++) { x.save(); x.translate(rr() * W, rr() * H); x.rotate(rr() * 6); x.fillStyle = ['#e85a2a', '#f29a3a', '#c8401e'][i % 3]; x.beginPath(); x.ellipse(0, 0, 6 + rr() * 5, 3, 0, 0, 7); x.fill(); x.restore(); } }, 2.5, 0.9);
+  // UI
+  c.font = '600 30px "Crimson Text"'; c.fillStyle = '#3a1a10'; c.textAlign = 'left'; c.fillText('1st', 20, 50);
+  c.font = 'italic 14px "Crimson Text"'; c.fillText('of 6 · lap 2', 66, 49);
+  c.textAlign = 'right'; c.font = '600 18px "Crimson Text"'; c.fillText('0:41.7', 282, 46);
+}
+
+// ---------- CHILL: dawn on a lily pond ----------
+function chill(p) {
+  const c = p.ctx;
+  p.grad([[0, '#f2c8c8'], [0.4, '#f8dcc0'], [0.62, '#fbecd2'], [1, '#c8d8c8']]);
+  p.glow(200, 170, 180, 'rgba(255,240,210,A)', 0.7);
+  p.layer((x, q) => { q.fill(q.ridge(250, 60, 0.012, 5), '#c8b0c0', false); }, 6, 0.7);
+  p.layer((x, q) => { const r = rng(5); for (let i = 0; i < 12; i++) q.fill(q.blob(r() * W, 262 + r() * 10, 26 + r() * 22, i + 3, 9, 0.2), '#9ab49a', false); }, 4, 0.8);
+  // still water with soft reflections
+  p.fill(new Path2D('M-5 540 L-5 286 L305 286 L305 540 Z'), p.vgrad(286, 540, '#dfe8e0', '#7a9a98'));
+  c.save(); c.globalAlpha = 0.35; c.filter = 'blur(4px)'; p.glow(200, 330, 90, 'rgba(255,240,210,A)', 0.6); c.restore();
+  c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1; [[40, 300, 60], [180, 312, 80], [90, 340, 50], [220, 360, 40]].forEach(([x, y, w]) => { c.beginPath(); c.moveTo(x, y); c.lineTo(x + w, y); c.stroke(); });
+  // lily pads and flowers
+  const pad = (x, y, r) => { const pa = new Path2D(); pa.ellipse(x, y, r, r * 0.42, 0, 0.35, Math.PI * 2 - 0.05); pa.lineTo(x, y); pa.closePath(); p.fill(pa, p.vgrad(y - r * 0.4, y + r * 0.4, '#8ac48a', '#4a8a5a')); };
+  [[60, 380, 22], [230, 336, 16], [190, 420, 26], [40, 450, 18], [260, 470, 22]].forEach(([x, y, r]) => pad(x, y, r));
+  [[64, 374], [196, 412]].forEach(([x, y]) => { for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i - 2.5) * 0.35; c.fillStyle = i % 2 ? '#ffd0e0' : '#ffe4ec'; c.beginPath(); c.ellipse(x + Math.cos(a) * 4, y + Math.sin(a) * 4, 2.6, 6, a + Math.PI / 2, 0, 7); c.fill(); } p.glow(x, y - 3, 10, 'rgba(255,230,240,A)', 0.4); });
+  // glowing koi below the surface
+  [[120, 452, 0.4, '#ff9a5a'], [150, 470, -0.3, '#fff0e0']].forEach(([x, y, a, col]) => { c.save(); c.translate(x, y); c.rotate(a); c.globalAlpha = 0.75; c.filter = 'blur(1.2px)'; c.fillStyle = col; c.beginPath(); c.ellipse(0, 0, 12, 4.5, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-10, 0); c.lineTo(-18, -5); c.lineTo(-18, 5); c.fill(); c.restore(); p.glow(x, y, 16, 'rgba(255,180,120,A)', 0.25); });
+  // mossy stone, Wren fishing
+  p.fill(new Path2D('M60 312 C70 290 130 286 146 300 C156 310 150 322 136 326 C110 330 76 330 60 312 Z'), p.vgrad(286, 330, '#8aa07a', '#4a5a46'));
+  wren(p, 104, 302, 1.9, { rim: 'rgba(255,240,220,0.8)' });
+  c.strokeStyle = '#5a3a2a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(118, 262); c.quadraticCurveTo(170, 214, 214, 222); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(214, 222); c.lineTo(220, 344); c.stroke();
+  c.fillStyle = '#e8504a'; c.beginPath(); c.arc(220, 344, 2.4, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,0.6)'; c.beginPath(); c.ellipse(220, 346, 9, 2.6, 0, 0, 7); c.stroke();
+  // light shafts and willow strands in front
+  [[160, 0.25, 40], [240, 0.25, 28]].forEach(([x, a, w]) => p.shaft(x, -20, a, w, w * 2.4, 520, 'rgba(255,245,225,A)', 0.25));
+  p.layer((x) => { x.strokeStyle = '#5a7a4a'; x.lineCap = 'round'; const r = rng(9); for (let i = 0; i < 22; i++) { const x0 = 220 + r() * 100, len = 120 + r() * 200; x.lineWidth = 2 + r() * 2; x.beginPath(); x.moveTo(x0, -10); x.quadraticCurveTo(x0 - 10, len * 0.5, x0 - 4 + r() * 6, len); x.stroke(); } x.fillStyle = '#6a8a52'; for (let i = 0; i < 80; i++) { x.beginPath(); x.ellipse(220 + r() * 100, r() * 300, 2, 5, r(), 0, 7); x.fill(); } }, 2.2, 0.95);
+  p.bokeh(22, 0, 120, W, 300, 'rgba(255,250,230,A)', 4, 4);
+  c.font = 'italic 14px "Crimson Text"'; c.fillStyle = 'rgba(70,60,60,0.7)'; c.textAlign = 'center'; c.fillText('the pond is quiet this morning', W / 2, 505);
+  c.font = '600 16px "Crimson Text"'; c.textAlign = 'left'; c.fillText('3 / 5', 22, 38);
+}
+
+const SHOTS = {};
+[['fight', fight], ['horror', horror], ['race', race], ['chill', chill]].forEach(([name, fn]) => {
+  const [cv, ctx] = mk(); fn(P(ctx)); SHOTS[`paint-${name}`] = cv.toDataURL('image/png');
+});
+window.SHOTS = SHOTS; document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
