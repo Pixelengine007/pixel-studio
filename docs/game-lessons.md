@@ -27,3 +27,9 @@ Read before starting a new game. Newest game first; each lesson says what to do 
 
 1. **No Phaser blend modes.** Shell Swap's MULTIPLY sunset worked in our headless Chrome but rendered as a solid white sheet on Thomas's browser. Use plain alpha tints for light and mood.
 2. **Deliver games as links, not files.** Phone file previews often show HTML without running scripts. Publish a web page (`tools/bundle.py --cdn`) or use GitHub Pages.
+
+## Night Ferry (side view), 23 Nov 2026
+- Thomas: "graphics are good, gameplay is boring and does not really work". Two art passes were spent before the core action had been judged by a human.
+- Rule from now on: build a playable feel test of only the core action first, send it to Thomas, and polish only after he says the feel works.
+- Bots prove a game can be won, never that it is fun. Also test "doing nothing": in River Run v1 doing nothing won every run, because bumping the banks acted like guide rails.
+- A strong core action needs a decision the player makes every few seconds, plus a visible cause → effect (I crashed → a spirit flew out → I can steer over it to save it).
