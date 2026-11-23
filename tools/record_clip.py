@@ -57,6 +57,7 @@ def main():
     ap.add_argument("--policy", default="intended")
     ap.add_argument("--skip", type=float, default=0, help="seconds to fast-forward before recording")
     ap.add_argument("--scale", type=int, default=6)
+    ap.add_argument("--smooth", action="store_true", help="painted games: scale to 1080 wide with a smooth filter")
     ap.add_argument("--out")
     args = ap.parse_args()
 
@@ -92,7 +93,7 @@ def main():
         cmd = [
             "ffmpeg", "-y", "-v", "error", "-framerate", "60", "-i", str(tmp / "f%05d.png"),
             "-i", str(tmp / "audio.wav"),
-            "-vf", f"scale=iw*{args.scale}:ih*{args.scale}:flags=neighbor",
+            "-vf", ("scale=1080:-2:flags=lanczos" if args.smooth else f"scale=iw*{args.scale}:ih*{args.scale}:flags=neighbor"),
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", str(out),
         ]

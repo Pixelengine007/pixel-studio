@@ -297,6 +297,7 @@
   studio.registerApi = function (api) { studio.api = api; };
 
   studio.createGame = function (opts) {
+    if (opts.smooth) return createSmooth(opts);
     let height = H;
     let zoom = 1;
     if (!fixed) {
@@ -324,6 +325,34 @@
     });
     return game;
   };
+
+  // Smooth (painted) games: a fixed logical playfield (default 360 x 640) rendered at 2x for crisp
+  // painted art. Taller phones get extra height (logical units) above the playfield, never wider.
+  // The game paints straight onto the canvas in a 'postrender' handler; Phaser only runs the loop and input.
+  function createSmooth(opts) {
+    const LW = opts.width || 360, LH = opts.height || 640, RES = opts.res || 2;
+    let lh = LH;
+    if (!fixed) lh = Math.max(LH, Math.min(Math.round(LW * window.innerHeight / window.innerWidth), Math.round(LH * 1.25)));
+    const game = new Phaser.Game({
+      type: Phaser.CANVAS,
+      parent: 'game',
+      width: LW * RES,
+      height: lh * RES,
+      pixelArt: false,
+      backgroundColor: opts.backgroundColor || '#000000',
+      audio: { noAudio: true },
+      scale: fixed ? undefined : { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scene: opts.scenes,
+      banner: false,
+    });
+    studio.game = game;
+    studio.view = { width: LW, height: lh, playHeight: LH, extra: lh - LH, res: RES };
+    game.events.once('ready', () => {
+      if (fixed) game.loop.sleep();
+      studio.ready = true;
+    });
+    return game;
+  }
 
   // Advance n fixed frames (bot and clip modes only).
   studio.step = function (n) {
