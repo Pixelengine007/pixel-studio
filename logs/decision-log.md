@@ -226,3 +226,8 @@ Found and fixed:
 - The tripwire was a white bar; now a taut rope. Small pine cones on the giants' shoulders read as spikes; removed. Cyan flowers read as stray sparkles; replaced. Houses and lamp posts were cut off by the bottom edge; moved up. The thumb marker was a ring of loose dots with a square; now a clean ring and round knob. Footprints lingered as dark holes; shorter and smaller.
 Still not right: a giant that gets through stands on the roofs as it walks out; giants pass through trees; a fall towards the camera is awkward.
 Bots and page tests unchanged (pass, 60 fps).
+
+## 2026-11-24 — Tanglefoot approved; next concept: survival horror
+- Tanglefoot (look 5) approved by Thomas. Parked as it is; open items: a final name, variation between nights, clip.
+- Thomas asked for a survival horror game and wants to pick from ideas. Our rule says toys decide, not sentences. I do both: three ideas (after dropping three that already exist), my own pick stated, and whichever he picks becomes a grey toy before any art.
+- My pick: The Line. It is the closest relative of Outrun the Flock (a group that reacts to you), and it carries stakes without text. Afterimage is the scariest and best for clips but the most likely to frustrate.

@@ -146,3 +146,13 @@ Uniqueness check (23 Nov): "herding cats with a laser pointer" exists as several
 | 5 | Near Miss | One-thumb dodge | Slow motion and a combo on every near miss | Slow-mo near miss |
 
 Build order: 1 → 2 → 3 → 4 → 5 (strongest evidence and clip potential first). Background note: Thomas's earlier approved concepts (herding, moth chase) were not selected by this round; concept 4 borrows the "creatures going home" payoff only because sorting has strong data.
+
+## 2026-11-24 — Survival horror: ideas thought up here, then checked against the web
+Brief from Thomas: "make a survival horror game, first show me the ideas and ill choose".
+Ideas were written down before any search. Web check afterwards (six searches, not exhaustive):
+- Footsteps (things retrace your exact path): DROPPED. Echo Hunt on the App Store is this idea on a phone (apps.apple.com/us/app/echo-hunt/id6760329092); Spooky Chase (2021) did it as a platformer.
+- Firewood (keep a fire alive until dawn, fetch wood from the dark): DROPPED. Crowded: several itch.io games called Campfire, Steam titles, and Hold Till Dawn on CrazyGames (browser and phone, portrait, Sept 2026).
+- Shadows (it travels through the shadows your lantern casts): DROPPED. Where Shadows Slumber is a polished phone puzzle game about a lantern and shadows; Shadow Lurkers is a small top-down browser horror game.
+- Afterimage (camera flash is the only light; the picture fades and shows where things were): KEPT. Small first-person PC games use a camera flash as the only light (HorrorCore, Flash by Jameno Games). Nothing found top-down on phones, nothing with the fading afterimage.
+- The Line (lead frightened people through the dark with one lantern): KEPT. Many single-character stay-in-the-light games; nothing found where you lead a line of people.
+- The Swarm (a sea of rats that parts round your light): KEPT. Known from A Plague Tale: Innocence (PC and consoles, 2019). No phone arcade version found.
