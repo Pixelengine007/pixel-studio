@@ -26,3 +26,4 @@
 | 24 Nov 2026 | Tanglefoot first look (art) | Rejected the art | "i dont have the feeling the graphics arte the same as the previous game" | Reference stays Night Ferry / River Run: painted night scene with depth, not a flat field |
 | 24 Nov 2026 | Tanglefoot look 2 | Not there yet | "The game needs to feel and look more professional" | Weight, feedback, sound and interface count as much as the drawing |
 | 24 Nov 2026 | Tanglefoot look 5 | Approved | "aproved" | Approved after two rounds of my own review; he then asked for a survival horror game and wants to choose from ideas first |
+| 24 Nov 2026 | Horror ideas round 1 (The Line, Afterimage, The Swarm) | None picked | "Come with more ideas" | All three were 'a small light in the dark'; round 2 varies the threat and the verb instead |

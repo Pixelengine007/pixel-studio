@@ -156,3 +156,13 @@ Ideas were written down before any search. Web check afterwards (six searches, n
 - Afterimage (camera flash is the only light; the picture fades and shows where things were): KEPT. Small first-person PC games use a camera flash as the only light (HorrorCore, Flash by Jameno Games). Nothing found top-down on phones, nothing with the fading afterimage.
 - The Line (lead frightened people through the dark with one lantern): KEPT. Many single-character stay-in-the-light games; nothing found where you lead a line of people.
 - The Swarm (a sea of rats that parts round your light): KEPT. Known from A Plague Tale: Innocence (PC and consoles, 2019). No phone arcade version found.
+
+## 2026-11-24 — Survival horror, round 2 (Thomas: "Come with more ideas")
+Round 1 was three versions of one thing (a small light in darkness). Round 2 deliberately varies what the threat is and what you do. Written first, checked after (six searches, not exhaustive):
+- Thin Ice (something under the lake ice follows you; the ice weakens where you run): KEPT. Found only first-person ice/Antarctic horror on PC and console; nothing with a creature under lake ice seen from above.
+- Burn It Back (a growth spreads through the room; your flame spreads too): KEPT. Spreading-fire games exist (Flame Over, firefighting, PC/Vita; jam games Controlled Burn and Flamesower); no horror version and no phone version found.
+- The Dog (you cannot see it, your dog can): KEPT. Blair Witch (2019, PC/console, from memory) has a dog that points at enemies; Sense: Beyond Sight is a small 3D Windows game with the same idea. Nothing top-down on phones found.
+- The Corn (unseen hunter, you only see stalks move; move in the gusts): KEPT with a warning. The setting is well used: Cornfield (PS4/PS5/Switch, 2026), Terror in the Corn (Steam), and an unreleased Steam game where crows and running attract a sound-hunting stalker. All first-person.
+- Board up the cabin with its own furniture: DROPPED. Phone games already there: Forest Cabin: Survive, Knock-Knock, Storm Warning (2D pixel cabin with breakable windows).
+- Hide in a cutaway house and hold your breath: DROPPED. Hide-from-the-monster in a house is the most crowded shelf in phone horror.
+My pick over both rounds: Thin Ice, then The Line.
