@@ -234,3 +234,9 @@ Bots and page tests unchanged (pass, 60 fps).
 
 ## 2026-11-24 — Horror ideas: three lists, no pick; my position
 Thomas asked for more ideas twice without saying what was missing. I gave a third round but said plainly that a fourth list is the route that failed on 23 Nov (about thirty ideas, none picked), and proposed toys of The Horde and Thin Ice. Asked him one thing: what is missing.
+
+## 2026-11-24 — Horror concept: re-ranked for "can become a longer story game"
+- Thomas's criterion: the idea should eventually become a longer story game. This fits the business model (first chapter free, the story is the paid unlock) and our small-scope rule (chapter 1 is still one place, a few minutes).
+- Re-ranking of the ten ideas by whether the core action carries a story of chapters: strong: The Line (a journey with named people you can lose), The Dog (you and a companion), Afterimage (the photographs tell the story). Middling: Sleepwalkers, Thin Ice, The Swarm, Burn It Back, The Corn. Weak: The Horde (arcade), Bitten (a single twist, not a journey).
+- I withdraw The Horde as my pick; it was chosen for toy fun only. My pick is The Line. Several of the other ideas can be chapters of that journey (the frozen lake, the sleepwalking village, the corn) without changing the core action.
+- Caution logged: a story game is many months of content. Order stays: grey toy of the core action, then chapter 1, then the clip test, and only then more chapters.

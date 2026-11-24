@@ -59,4 +59,6 @@ Approval of each new game concept (his verdict after playing its grey-box toy), 
 - Pass `tools/bot_test.py`: no page errors, no trivial strategy (idle, spam, hold, random) wins, the intended strategy can win.
 
 ## Current status
-Phase 1 — setup. Plan: "Pixel Game Studio — Step Plan" in the Claude Project.
+- Tanglefoot (rope and giants): concept and look approved by Thomas (look 5, 24 Nov 2026). Parked; open: final name, variation between nights, clip.
+- Next game: survival horror. Thomas chooses the concept. His requirement (24 Nov 2026): the idea must be able to grow into a longer story game; the small first version is its first chapter, and the story is what the paid unlock sells.
+- Plan: "Pixel Game Studio — Step Plan" in the Claude Project.
