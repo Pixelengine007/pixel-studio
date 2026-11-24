@@ -176,3 +176,10 @@ Aim this round: more doing, less avoiding (his own list: building and defending,
 - Blood in the Snow (it follows your trail; lay false trails): DROPPED. Deadly Footprints (Steam, Feb 2025) is top-down, snow, a killer following your footprints, false trails. Small, PC only, but the same design.
 - Trap the house, then be the bait: DROPPED. Several small games (Home Invader, Home Between Us, 78 Hour Rain).
 Standing after three rounds: ten ideas kept. My two for toys: The Horde and Thin Ice.
+
+## 2026-11-24 — Survival horror, round 4: built as story games from the start
+Thomas's criterion: must be able to become a longer story game. Rounds 1-3 were one-room loops. Round 4 starts from who, where and why, with one system that reacts. Written first, checked after (three searches, not exhaustive):
+- The Same Night (a three-minute night that repeats in one village; each time you bring one more person through; leading people in your light is the doing): KEPT. Time-loop horror is a known device: Eternal Recurrence (free RPG Maker game, PC, village destroyed each night, turn-based), Fear the Timeloop (PlayStation), Minit (60-second loop, not horror). The combination with leading people in real time not found.
+- Black Damp (go down a mine after a collapse, bring the trapped men up; lamp flame and canary show what you cannot see; gas forces you to shutter the lamp): KEPT with a warning. Many small PC mine horrors (FIREDAMP, Dug Too Deep, Dark Mine); jam games use a canary as gas warning (Carl the Canary) and have you lead scared miners to a fire (Knight in the Mines). No phone version found.
+- The Tide House (a house on a tidal rock floods twice a night; every door you open lets the sea further in): KEPT. Pieces exist in small PC games and prototypes: Aqua (doors control the flow of water), Lost in Tide (student prototype, tides in a flooded building), The Wicked Father (rising water, old style). No polished phone version found.
+My pick: The Same Night. It is The Line's doing, in a form where one village carries a long story, which a one-person studio can afford.
