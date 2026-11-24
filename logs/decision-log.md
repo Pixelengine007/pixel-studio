@@ -231,3 +231,6 @@ Bots and page tests unchanged (pass, 60 fps).
 - Tanglefoot (look 5) approved by Thomas. Parked as it is; open items: a final name, variation between nights, clip.
 - Thomas asked for a survival horror game and wants to pick from ideas. Our rule says toys decide, not sentences. I do both: three ideas (after dropping three that already exist), my own pick stated, and whichever he picks becomes a grey toy before any art.
 - My pick: The Line. It is the closest relative of Outrun the Flock (a group that reacts to you), and it carries stakes without text. Afterimage is the scariest and best for clips but the most likely to frustrate.
+
+## 2026-11-24 — Horror ideas: three lists, no pick; my position
+Thomas asked for more ideas twice without saying what was missing. I gave a third round but said plainly that a fourth list is the route that failed on 23 Nov (about thirty ideas, none picked), and proposed toys of The Horde and Thin Ice. Asked him one thing: what is missing.

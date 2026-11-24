@@ -166,3 +166,13 @@ Round 1 was three versions of one thing (a small light in darkness). Round 2 del
 - Board up the cabin with its own furniture: DROPPED. Phone games already there: Forest Cabin: Survive, Knock-Knock, Storm Warning (2D pixel cabin with breakable windows).
 - Hide in a cutaway house and hold your breath: DROPPED. Hide-from-the-monster in a house is the most crowded shelf in phone horror.
 My pick over both rounds: Thin Ice, then The Line.
+
+## 2026-11-24 — Survival horror, round 3 (Thomas: "more ideas")
+Aim this round: more doing, less avoiding (his own list: building and defending, fighting, leading a group, moving with skill). Written first, checked after (six searches, not exhaustive):
+- The Horde (the dead follow whoever is alive; lead the whole horde into the crypt and shut the door): KEPT. Luring zombies is a common tactic inside shooters; phone games mostly make you the horde (Zombie Night Terror, Undead Horde). Not found as the core action.
+- Sleepwalkers (the village sleepwalks towards the lake; turn them round without waking them): KEPT. Sleepwalker's Journey (phone, 2012) and the jam game Sloopwalker guide one sleepwalker in a puzzle; herding many, seen from above, not found.
+- Bitten (three minutes before you turn; lock your family away from yourself): KEPT. Jam games with a turn timer exist (Final Infection); protecting others from your own turning not found.
+- One Bolt (one crossbow bolt, fetch it after every shot): DROPPED. Titan Souls is exactly one retrievable arrow and was released on Android.
+- Blood in the Snow (it follows your trail; lay false trails): DROPPED. Deadly Footprints (Steam, Feb 2025) is top-down, snow, a killer following your footprints, false trails. Small, PC only, but the same design.
+- Trap the house, then be the bait: DROPPED. Several small games (Home Invader, Home Between Us, 78 Hour Rain).
+Standing after three rounds: ten ideas kept. My two for toys: The Horde and Thin Ice.
