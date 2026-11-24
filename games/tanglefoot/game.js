@@ -37,7 +37,7 @@
   S.defineSfx('drum', [{ type: 'sine', f0: 96, f1: 48, at: 0, dur: 0.14, vol: 0.09 }]);
   S.defineSfx('cricket', [0, 0.05, 0.1].map((at) => ({ type: 'square', f0: 4200, f1: 4000, at, dur: 0.025, vol: 0.006 })));
 
-  let current = null;
+  let current = null, seenTitle = false;      // the title shows once; 'play again' goes straight back into the night
 
   class Toy extends Phaser.Scene {
     constructor() { super('toy'); }
@@ -45,9 +45,12 @@
     create() {
       current = this;
       this.H = S.view.height;
+      // the ground is drawn at a tilt: ground (x, y) is on screen at (x, HZ + y * K). The picture and the controls both use these.
+      this.HZ = Math.round(130 + (this.H - 640) * 0.4); this.K = (this.H - this.HZ) / this.H;
+      this.touch = 'ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0;
       if (!window.__tgHooked) { window.__tgHooked = true; this.game.events.on('postrender', () => current && current.draw()); }
       this.rand = S.rng(S.seed);
-      this.t = 0; this.pt = 0; this.state = S.fixed ? 'playing' : 'title'; this.endT = 0; this.LAMPS = LAMPS; this.TOTAL = NIGHT.length; this.LEASH = LEASH; this.TREE_LEASH = TREE_LEASH; this.moving = false;
+      this.t = 0; this.pt = 0; this.state = S.fixed || seenTitle ? 'playing' : 'title'; this.endT = 0; this.LAMPS = LAMPS; this.TOTAL = NIGHT.length; this.LEASH = LEASH; this.TREE_LEASH = TREE_LEASH; this.moving = false;
       this.p = { x: 180, y: this.H - 190, stun: 0, wx: 0, wy: 0 };
       this.trail = [];            // the loose rope dragging behind you
       this.chain = [];            // what the rope is caught on, in order; the last one is on your end of the rope
@@ -76,13 +79,13 @@
     aim(g) {
       const P = this.p, cx = (g.feet[0].x + g.feet[1].x) / 2, cy = (g.feet[0].y + g.feet[1].y) / 2;
       const dx = P.x - cx, dy = P.y - cy, d = Math.hypot(dx, dy) || 1;
-      g.chase = P.stun <= 0 && d < NOTICE + (g.chase ? 40 : 0) && this.state === 'playing';
+      g.chase = g.state === 'walk' && P.stun <= 0 && d < NOTICE + (g.chase ? 40 : 0) && this.state === 'playing';
       const wantA = g.chase ? Math.atan2(dy, dx) : Math.PI / 2, a = Math.atan2(g.hy, g.hx);
       let da = wantA - a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU;
       const na = a + clamp(da, -0.7, 0.7); g.hx = Math.cos(na); g.hy = Math.sin(na);
       const f = g.feet[g.foot], side = g.foot ? 1 : -1, stride = g.chase ? 30 : 24;
       let lx = cx + g.hx * stride + -g.hy * side * g.sp, ly = cy + g.hy * stride + g.hx * side * g.sp;
-      if (P.stun <= 0 && Math.hypot(P.x - lx, P.y - ly) < 78) { lx += clamp(P.x - lx, -24, 24); ly += clamp(P.y - ly, -20, 20); }
+      if (g.state === 'walk' && P.stun <= 0 && Math.hypot(P.x - lx, P.y - ly) < 78) { lx += clamp(P.x - lx, -24, 24); ly += clamp(P.y - ly, -20, 20); }
       g.fromX = f.x; g.fromY = f.y; g.landX = clamp(lx, 24, 336); g.landY = ly;
     }
 
@@ -94,7 +97,7 @@
       this.t += dt; this.shake = Math.max(0, this.shake - dt * 14); this.fadeIn = Math.max(0, this.fadeIn - dt);
       this.updateFx(dt); this.music(dt);
       if (this.msg && (this.msg.t -= dt) <= 0) this.msg = null;
-      if (this.state === 'title') { if (this.fadeIn <= 0 && (S.input.pressed || (this.keys && this.keys.ENTER.isDown))) { this.state = 'playing'; S.sfx('catch'); } return; }
+      if (this.state === 'title') { if (this.fadeIn <= 0 && (S.input.pressed || (this.keys && this.keys.ENTER.isDown))) { this.state = 'playing'; seenTitle = true; S.sfx('catch'); } return; }
       this.pt += this.state === 'playing' ? dt : 0;
       if (this.state !== 'playing') {
         this.endT += dt; this.giants.forEach((g) => this.updateGiant(g, dt));
@@ -111,6 +114,7 @@
       this.stickNow = null;
       if (this.stick) { const dx = S.input.x / RES - this.stick.x, dy = S.input.y / RES - this.stick.y, d = Math.hypot(dx, dy); if (d > 4) { const k = Math.min(1, d / 34) / d; wx = dx * k; wy = dy * k; } this.stickNow = { x: this.stick.x + wx * 30, y: this.stick.y + wy * 30 }; }
       if (K) { const kx = (K.RIGHT.isDown || K.D.isDown ? 1 : 0) - (K.LEFT.isDown || K.A.isDown ? 1 : 0), ky = (K.DOWN.isDown || K.S.isDown ? 1 : 0) - (K.UP.isDown || K.W.isDown ? 1 : 0); if (kx || ky) { const n = Math.hypot(kx, ky); wx = kx / n; wy = ky / n; } }
+      { const gy = wy / this.K, n = Math.hypot(wx, gy), m = Math.hypot(wx, wy); if (n > 0) { wx = wx / n * m; wy = gy / n * m; } }      // screen direction -> ground direction, same strength
       P.wx = wx; P.wy = wy;
       if (P.stun > 0) P.stun -= dt;
       else { const ox = P.x, oy = P.y; P.x = clamp(P.x + wx * SPEED * dt, 8, 352); P.y = clamp(P.y + wy * SPEED * dt, 60, this.H - 70); this.moving = Math.hypot(P.x - ox, P.y - oy) > 0.2; if (this.moving) { this.dragTrail(); this.moved = true; this.dustT -= dt; if (this.dustT <= 0) { this.dustT = 0.14; this.parts.push({ kind: 'dust', x: P.x, y: P.y, z: 0, vx: -wx * 14, vy: -wy * 14, vz: 5, r: 2.4, life: 0, max: 0.32 }); } } }
@@ -136,19 +140,21 @@
     updateGiant(g, dt) {
       const P = this.p;
       if (g.land > 0) g.land -= dt;
-      if (g.state === 'walk') {
-        g.st += dt / (g.chase ? 0.6 : g.big ? 0.9 : 0.74);
+      if (g.state === 'walk' || g.state === 'through') {
+        const thr = g.state === 'through';
+        g.st += dt / (thr ? 0.5 : g.chase ? 0.6 : g.big ? 0.9 : 0.74);
         const f = g.feet[g.foot], k = Math.min(1, g.st), e = k * k * (3 - 2 * k);
         f.x = g.fromX + (g.landX - g.fromX) * e; f.y = g.fromY + (g.landY - g.fromY) * e;
         if (g.st >= 1) {
           g.st = 0; g.foot = 1 - g.foot;
           g.land = 0.2;
           if (f.y > 0) { S.sfx('step', (g.big ? 0.72 : 0.92) + this.fx() * 0.2); this.shake = Math.max(this.shake, g.big ? 2.4 : 1.4); this.prints.push({ x: f.x, y: f.y, big: g.big, a: 0 }); this.dust(f.x, f.y, g.big ? 15 : 12, 5, 0.6); }
-          if (this.state === 'playing' && P.stun <= 0 && Math.hypot(P.x - f.x, P.y - f.y) < (g.big ? 31 : 26)) this.squash(f);
+          if (!thr && this.state === 'playing' && P.stun <= 0 && Math.hypot(P.x - f.x, P.y - f.y) < (g.big ? 31 : 26)) this.squash(f);
           this.aim(g);
         }
         g.x = (g.feet[0].x + g.feet[1].x) / 2; g.y = (g.feet[0].y + g.feet[1].y) / 2;
-        if (g.y > this.H - 96 && this.state === 'playing') { g.gone = true; this.through += 1; this.unhook(g); this.lampOut('A GIANT GOT THROUGH'); }
+        if (thr) { if (g.y > this.H + 70) g.gone = true; }
+        else if (g.y > this.H - 96) { g.state = 'through'; g.chase = false; this.unhook(g); if (this.state === 'playing') { this.through += 1; this.lampOut('A GIANT GOT THROUGH'); } }
       } else if (g.state === 'lean') {          // the rope is tight: a short beat before it goes over
         g.ft += dt; if (g.ft > 0.16) { g.state = 'fall'; g.ft = 0; }
       } else if (g.state === 'fall') {
@@ -289,7 +295,7 @@
               vx = -dy / d + (want - d) / 30 * dx / d; vy = dx / d + (want - d) / 30 * dy / d;
             } else { vx = 180 - P.x; vy = self.H * 0.55 - P.y; }
           }
-          const n = Math.hypot(vx, vy) || 1;
+          vy *= self.K; const n = Math.hypot(vx, vy) || 1;
           return { down: true, x: (180 + vx / n * 40) * RES, y: (400 + vy / n * 40) * RES };
         };
       };
@@ -303,7 +309,7 @@
           let vx, vy;
           if (self.wires.length) { vx = 180 - P.x; vy = self.H * 0.52 - P.y; if (Math.hypot(vx, vy) < 6) return { down: true, x: 180 * RES, y: 400 * RES }; }
           else { const c = held && held.kind === 'tree' ? self.trees[1] : self.trees[0], dx = P.x - c.x, dy = P.y - c.y, d = Math.hypot(dx, dy) || 1; vx = -dy / d + (40 - d) / 20 * dx / d; vy = dx / d + (40 - d) / 20 * dy / d; }
-          const n = Math.hypot(vx, vy) || 1; return { down: true, x: (180 + vx / n * 40) * RES, y: (400 + vy / n * 40) * RES };
+          vy *= self.K; const n = Math.hypot(vx, vy) || 1; return { down: true, x: (180 + vx / n * 40) * RES, y: (400 + vy / n * 40) * RES };
         }; })() },
       });
     }

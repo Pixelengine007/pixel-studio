@@ -42,3 +42,10 @@ Read before starting a new game. Newest game first; each lesson says what to do 
 ## Using the engine is not the same as matching the look (Tanglefoot, 24 Nov 2026)
 - The first Tanglefoot picture used the Night Ferry pixel engine and still did not look like Night Ferry; Thomas saw it at once. The look is the composition (sky, moon, layers, mist, light pools, characters with faces), not the renderer.
 - Before sending any new art: put a screenshot next to Night Ferry at the same size and compare. If the new one has fewer layers, flatter ground, smaller or faceless characters, it is not ready.
+
+## Review by staging, not by watching a bot (Tanglefoot, 24 Nov 2026)
+- The bot's run never showed the worst mistakes. Staging them did: put the hero behind every tall thing, walk an enemy into every edge of the field, make something fall in each direction, then look at the screenshot.
+- Measure the cost of one frame against a game that is known to run well on Thomas's phone, with the field at its busiest, before sending.
+- Count the letters: at text size 2 a line holds 29 characters, less inside a panel.
+- Play the retry path: from the end screen back into play must be one tap.
+- With a tilted ground, steer in screen directions and convert to ground, not the other way round.

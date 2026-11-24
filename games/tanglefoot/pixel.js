@@ -52,6 +52,7 @@
   function fbm(x, s) { return noise1(x, s) * 0.6 + noise1(x * 2.3, s + 7) * 0.28 + noise1(x * 5.1, s + 13) * 0.12; }
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+  const FALL = new Float32Array(257); for (let i = 0; i < 257; i++) FALL[i] = Math.pow(Math.max(0, 1 - i / 256), 1.3);     // how light falls off from a lamp
   // ---------- pixel buffer ----------
   function Buf(W, H) {
     const N = W * H;
@@ -94,7 +95,7 @@
     };
     b.light = (x, y, r, s) => {
       const x0 = Math.max(0, Math.floor(x - r)), x1 = Math.min(W - 1, Math.ceil(x + r)), y0 = Math.max(0, Math.floor(y - r)), y1 = Math.min(H - 1, Math.ceil(y + r));
-      for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) { const d = Math.hypot(px - x, py - y); if (d < r) b.L[py * W + px] += s * Math.pow(1 - d / r, 1.3); }
+      const r2 = r * r; for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) { const d2 = (px - x) * (px - x) + (py - y) * (py - y); if (d2 < r2) b.L[py * W + px] += s * FALL[(Math.sqrt(d2 / r2) * 256) | 0]; }
     };
     return b;
   }
@@ -164,9 +165,17 @@
   function ellF(b, cx, cy, rx, ry, fn, id, em) { for (let py = Math.floor(cy - ry); py <= Math.ceil(cy + ry); py++) for (let px = Math.floor(cx - rx); px <= Math.ceil(cx + rx); px++) { const nx = (px + 0.5 - cx) / rx, ny = (py + 0.5 - cy) / ry; if (nx * nx + ny * ny > 1) continue; const c = fn(px, py, nx, ny); if (c >= 0) b.put(px, py, c >> 3, c & 7, id, em); } }
   function ringG(b, x, y, r, K, ramp, sh, gap) { const n = Math.max(16, Math.round(r * 5.4)); for (let i = 0; i < n; i++) { if (gap && (i % gap) >= gap / 2) continue; const a = i / n * TAU; b.put(x + Math.cos(a) * r, y + Math.sin(a) * r * K, ramp, sh, 0, 1); } }
   function arcG(b, x, y, r, K, a0, da, ramp, sh) { const n = Math.max(2, Math.round(Math.abs(da) * r)); for (let i = 0; i <= n; i++) { const a = a0 + da * i / n; for (let w = 0; w < 2; w++) b.put(x + Math.cos(a) * (r + w), y + Math.sin(a) * (r + w) * K, ramp, sh, 0, 1); } }
-  function glow(b, x, y, r, s, K) { const W = b.W, H = b.H, x0 = Math.max(0, Math.floor(x - r)), x1 = Math.min(W - 1, Math.ceil(x + r)), y0 = Math.max(0, Math.floor(y - r * K)), y1 = Math.min(H - 1, Math.ceil(y + r * K)); for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) { const d = Math.hypot(px - x, (py - y) / K); if (d < r) b.L[py * W + px] += s * Math.pow(1 - d / r, 1.3); } }
+  function glow(b, x, y, r, s, K) { const W = b.W, H = b.H, x0 = Math.max(0, Math.floor(x - r)), x1 = Math.min(W - 1, Math.ceil(x + r)), y0 = Math.max(0, Math.floor(y - r * K)), y1 = Math.min(H - 1, Math.ceil(y + r * K)); const r2 = r * r; for (let py = y0; py <= y1; py++) { const ey = (py - y) / K, e2 = ey * ey; for (let px = x0; px <= x1; px++) { const d2 = (px - x) * (px - x) + e2; if (d2 < r2) b.L[py * W + px] += s * FALL[(Math.sqrt(d2 / r2) * 256) | 0]; } } }
   function shadow(C, cx, cy, rx, ry, n = 1) { const W = 360, H = C.H, sm = C.sm; for (let py = Math.max(0, Math.floor(cy - ry)); py <= Math.min(H - 1, Math.ceil(cy + ry)); py++) for (let px = Math.max(0, Math.floor(cx - rx)); px <= Math.min(W - 1, Math.ceil(cx + rx)); px++) { const nx = (px + 0.5 - cx) / rx, ny = (py + 0.5 - cy) / ry; if (nx * nx + ny * ny <= 1 && sm[py * W + px] < n) sm[py * W + px] = n; } }
   function rope(b, x0, y0, x1, y1, tight) { const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0))); for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); const tw = ((x + y * 2) % 6 + 6) % 6 < 2; b.put(x, y + 1, 'ink', 1); b.put(x, y, tight ? 'cream' : 'rope', tight ? 3 : tw ? 2 : 3, 0, 1); b.put(x, y - 1, tight ? 'cream' : 'rope', tight ? 5 : tw ? 4 : 5, 0, 1); } }
+  function limb(b, x0, y0, x1, y1, t, ramp, sh, id) {
+    const h = t / 2, dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy || 1, r = RI[ramp], f = typeof sh === 'function';
+    for (let py = Math.floor(Math.min(y0, y1) - h); py <= Math.ceil(Math.max(y0, y1) + h); py++) for (let px = Math.floor(Math.min(x0, x1) - h); px <= Math.ceil(Math.max(x0, x1) + h); px++) {
+      const q = clamp(((px - x0) * dx + (py - y0) * dy) / l2, 0, 1), ex = px - x0 - dx * q, ey = py - y0 - dy * q;
+      if (ex * ex + ey * ey <= h * h) b.put(px, py, r, f ? sh(q) : sh, id);
+    }
+  }
+  function stamp(b, tile, x0, y0, id) { const W = b.W, H = b.H; for (let y = 0; y < tile.H; y++) { const dy = y + y0; if (dy < 0 || dy >= H) continue; for (let x = 0; x < tile.W; x++) { const si = y * tile.W + x; if (tile.R[si] < 0) continue; const dx = x + x0; if (dx < 0 || dx >= W) continue; const di = dy * W + dx; b.R[di] = tile.R[si]; b.S[di] = tile.S[si]; b.EM[di] = tile.EM[si]; b.ID[di] = id; } } }
   function mistTile(width, h, baseY, amp, seed, sh) {
     const t = Buf(width, h);
     for (let x = 0; x < width; x++) { const k = x / width, v = fbm(x * 0.016, seed) * (1 - k) + fbm((x - width) * 0.016, seed) * k; if (v < 0.44) continue; const top = Math.floor(baseY - (v - 0.44) * amp), bot = Math.ceil(baseY + 1 + (v - 0.44) * amp * 0.6); for (let y = Math.max(0, top); y < Math.min(h, bot); y++) t.put(x, y, 'fog', y <= top ? sh + 1 : sh); }
@@ -234,7 +243,7 @@
   }
 
   function giant(b, g, id, t, C, n) {
-    const K = C.K, s = g.big ? 1.25 : 1, st = g.state, up = st === 'walk' || st === 'lean';
+    const K = C.K, s = g.big ? 1.25 : 1, st = g.state, walks = st === 'walk' || st === 'through', up = walks || st === 'lean';
     const sink = Math.max(0, -4 - g.y) * 3.6, GY = (y) => C.HZ + y * K + sink, cx = g.x, cy = GY(g.y);
     const RK = RI.rock * 8, LF = RI.leaf * 8;
     b.clip = sink > 0 ? C.CREST : 0;
@@ -243,17 +252,17 @@
       b.outline(id); return;
     }
     const k = st === 'lean' ? 0.15 * Math.min(1, g.ft / 0.16) : st === 'fall' ? 0.15 + 0.85 * Math.pow(Math.min(1, g.ft / 0.38), 2) : st === 'down' ? 1 : 0;
-    const step = st === 'walk' ? Math.sin(Math.min(1, g.st) * Math.PI) : 0;
-    const bob = up ? (g.land > 0 ? g.land / 0.2 * 4 : 0) - step * 2 : 0, sway = st === 'walk' ? (g.feet[1 - g.foot].x - cx) * 0.25 : 0;
+    const step = walks ? Math.sin(Math.min(1, g.st) * Math.PI) : 0;
+    const bob = up ? (g.land > 0 ? g.land / 0.2 * 4 : 0) - step * 2 : 0, sway = walks ? (g.feet[1 - g.foot].x - cx) * 0.25 : 0;
     const T = (h, al) => [cx + (h ? sway * (1 - k) : 0) + g.dir.x * al * k * s, cy - h * s * (1 - k) + (h ? bob : 0) + g.dir.y * al * k * s * K];   // standing: above the feet; lying: along the fall
     const F = g.feet.map((q, i) => [q.x, GY(q.y) - (i === g.foot ? step * 9 : 0)]);
     const [hpx, hpy] = T(24, 34);
-    F.forEach(([fx, fy], i) => { const ex = hpx + (i ? -9 : 9) * s * (1 - k); b.line(fx, fy - 5, ex, hpy, 'rock', (q) => (q > 0.5 ? 2 : 3), Math.round(11 * s), id); b.ell((fx + ex) / 2 + (i ? -1 : 1) * s, (fy - 5 + hpy) / 2, 7 * s, 6 * s, 'rock', (px, py, nx, ny) => (ny < -0.3 ? 4 : 3), id); });
+    F.forEach(([fx, fy], i) => { const ex = hpx + (i ? -9 : 9) * s * (1 - k); limb(b, fx, fy - 5, ex, hpy, 11 * s, 'rock', (q) => (q > 0.5 ? 2 : 3), id); b.ell((fx + ex) / 2 + (i ? -1 : 1) * s, (fy - 5 + hpy) / 2, 7 * s, 6 * s, 'rock', (px, py, nx, ny) => (ny < -0.3 ? 4 : 3), id); });
     F.forEach(([fx, fy]) => { b.ell(fx, fy - 2, 11 * s, 6.5 * s, 'rock', (px, py, nx, ny) => (ny < -0.25 ? 4 : nx > 0.3 ? 3 : 2), id); b.ell(fx - 2, fy - 6 * s, 5 * s, 2.2 * s, 'leaf', 3, id); });
     const [tx, ty] = T(46, 66);
-    const swing = st === 'walk' ? Math.sin(g.st * Math.PI) * (g.foot ? 1 : -1) * 5 : 0;
-    const O = (sd, a, d) => [tx + (1 - k) * sd * a + k * (-g.dir.y) * sd * (a + d * 0.5), ty + (1 - k) * d + k * g.dir.x * sd * (a + d * 0.5) * K];
-    [-1, 1].forEach((sd) => { const [ax, ay] = O(sd, 22 * s, -8 * s), [bx, by] = O(sd, 31 * s, 24 * s + sd * swing); b.line(ax, ay, bx, by, 'rock', sd > 0 ? 3 : 2, Math.round(9 * s), id); b.ell(bx, by, 9.5 * s, 9 * s, 'rock', ball, id); });
+    const swing = walks ? Math.sin(g.st * Math.PI) * (g.foot ? 1 : -1) * 5 : 0;
+    const O = (sd, a, d) => [tx + (1 - k) * sd * a + k * (-g.dir.y * sd * a + g.dir.x * d * 0.8), ty + (1 - k) * d + k * (g.dir.x * sd * a + g.dir.y * d * 0.8) * K];     // lying: arms flung forward
+    [-1, 1].forEach((sd) => { const [ax, ay] = O(sd, 22 * s, -8 * s), [bx, by] = O(sd, 31 * s, 24 * s + sd * swing); limb(b, ax, ay, bx, by, 9 * s, 'rock', sd > 0 ? 3 : 2, id); b.ell(bx, by, 9.5 * s, 9 * s, 'rock', ball, id); });
     ellF(b, tx, ty, 26 * s, 23 * s, (px, py, nx, ny) => {
       const l = nx * 0.5 - ny * 0.75, edge = -0.4 + 0.13 * Math.sin(px * 0.8 + n * 2), m = ny * (1 - k) - (nx * g.dir.x + ny * g.dir.y) * k;
       if (m < edge) return LF + (l > 0.75 ? 5 : l > 0.5 ? 4 : 3);                                         // moss over the shoulders
@@ -277,12 +286,12 @@
     }, id);
     if (facing) {
       const ex = hx + Math.round((up ? g.hx : 0) * 4 * s), ey = hy + Math.round(1 * s), ew = Math.round(5 * s);
-      if (alive) { [-1, 1].forEach((sd) => b.rect(ex + sd * ew - 1, ey, 3, 2, g.chase ? 'red' : 'gold', 5, id, 1)); b.light(ex, ey, 20, 1.3); }
+      if (alive) [-1, 1].forEach((sd) => b.rect(ex + sd * ew - 1, ey, 3, 2, g.chase ? 'red' : 'gold', 5, id, 1));
       else [-1, 1].forEach((sd) => b.rect(ex + sd * ew - 1, ey + 1, 3, 1, 'ink', 0, id));
       b.rect(ex - ew, hy + Math.round(6 * s), ew * 2 + 1, 1, 'ink', 1, id); b.put(ex - ew + 1, hy + Math.round(6 * s) - 1, 'cream', 4, id); b.put(ex + ew - 1, hy + Math.round(6 * s) - 1, 'cream', 4, id);
     }
     b.outline(id);
-    if (alive) { b.light(gx, gyy, 30 * s, 1.5); if (!sink) glow(b, cx, cy, 50 * s, 1.5, K); }
+    if (alive) { if (!b.clip || gyy < b.clip - 4) b.light(gx, gyy, 30 * s, 1.5); if (!sink) glow(b, cx, cy, 50 * s, 1.5, K); }     // a heart stone still behind the ridge lights nothing on this side
     b.clip = 0;
   }
 
@@ -310,8 +319,7 @@
     glow(b, lx, y - 1, 98, 3, K);
   }
 
-  function village(b, sc, t, C) {
-    const H = C.H, lamps = sc.LAMPS - sc.hits;
+  function village(b, lamps, H) {
     [10, 100, 216, 306].forEach((x, i) => {
       const id = 80 + i, y = H - 30, lit = [0, 1, 1, 2][i] < lamps || (i === 1 && lamps > 0);
       b.rect(x + 30, y - 30, 7, 14, 'rock', (px) => (px > x + 33 ? 3 : 2), id);
@@ -322,27 +330,34 @@
       b.poly([[x - 4, y + 3], [x + 8, y - 20], [x + 36, y - 20], [x + 48, y + 3]], 'straw', (px, py) => (py >= y + 1 ? 0 : (y - py) % 5 === 0 ? 1 : px > x + 26 + (y - py) * 0.3 ? 3 : 2), id);
       b.rect(x + 7, y - 22, 30, 2, 'straw', (px) => (px > x + 24 ? 4 : 3), id);
       b.outline(id);
-      if (lit) { b.light(x + 12, y + 8, 40, 2); for (let n = 0; n < 3; n++) { const q = (t * 0.3 + n / 3 + i * 0.37) % 1; if (q < 0.92) b.ell(x + 34 + Math.sin(q * 5 + i) * 3 + q * 9, y - 33 - q * 26, 2 + q * 3.5, 1.6 + q * 2.4, 'cloud', q < 0.5 ? 3 : 2); } }
+      if (lit) b.light(x + 12, y + 8, 40, 2);
     });
     [78, 181, 284].forEach((x, k) => {     // the three lamps of the village
       const id = 90 + k, on = k < lamps;
       b.rect(x - 1, H - 32, 3, 32, 'wood', (px) => (px > x ? 3 : 2), id); b.rect(x - 3, H - 2, 7, 2, 'wood', 1, id);
-      if (on) lantern(b, x, H - 50, id, 0.9 + Math.sin(t * 7 + k) * 0.04);
+      if (on) lantern(b, x, H - 50, id, 0.9);
       else { b.line(x, H - 55, x, H - 50, 'ink', 1, 1, id); b.rect(x - 6, H - 50, 13, 3, 'ink', 2, id); b.rect(x - 5, H - 47, 11, 12, 'ink', 1, id); b.rect(x - 6, H - 35, 13, 3, 'ink', 2, id); }
       b.outline(id, false);
     });
   }
 
+  function smoke(b, lamps, t, H) {
+    [10, 100, 216, 306].forEach((x, i) => { if (!([0, 1, 1, 2][i] < lamps || (i === 1 && lamps > 0))) return; for (let n = 0; n < 3; n++) { const q = (t * 0.3 + n / 3 + i * 0.37) % 1; if (q < 0.92) b.ell(x + 34 + Math.sin(q * 5 + i) * 3 + q * 9, H - 63 - q * 26, 2 + q * 3.5, 1.6 + q * 2.4, 'cloud', q < 0.5 ? 3 : 2); } });
+  }
+
   function frame(sc, ctx) {
     const W = 360, H = sc.H, t = sc.t, P = sc.p, ch = sc.chain, last = ch[ch.length - 1];
     if (!cache || cache.H !== H) {
-      const HZ = Math.round(130 + (H - 640) * 0.4), K = (H - HZ) / H, CREST = HZ - 14, base = buildBase(W, H, HZ, K, CREST, sc.trees);
-      cache = { H, HZ, K, CREST, base: base.g, gm: base.gm, sm: new Uint8Array(W * H), b: Buf(W, H), img: ctx.createImageData(W, H), mistA: mistTile(720, 30, 20, 30, 3, 2), mistB: mistTile(720, 26, 16, 24, 6, 1), face: 1 };
+      const HZ = sc.HZ, K = sc.K, CREST = HZ - 14, base = buildBase(W, H, HZ, K, CREST, sc.trees);
+      cache = { H, HZ, K, CREST, base: base.g, gm: base.gm, sm: new Uint8Array(W * H), b: Buf(W, H), img: ctx.createImageData(W, H), mistA: mistTile(720, 30, 20, 30, 3, 2), mistB: mistTile(720, 26, 16, 24, 6, 1), face: 1, vb: {}, hp: [], pines: sc.trees.map((c, i) => { const tl = Buf(54, 88); pine(tl, 27, 84, 1, hash(i, 91)); return tl; }) };
       cache.out32 = new Uint32Array(cache.img.data.buffer);
     }
     const C = cache, b = C.b, base = C.base, K = C.K, HZ = C.HZ, GY = (y) => HZ + y * K;
     if (Math.abs(P.wx) > 0.3 && sc.moving) C.face = P.wx < 0 ? -1 : 1;
-    b.R.set(base.R); b.S.set(base.S); b.EM.set(base.EM); b.L.fill(0); b.ID.fill(0); C.sm.fill(0); b.box = {}; b.clip = 0;
+    const lamps = sc.LAMPS - sc.hits; let vb = C.vb[lamps];
+    if (!vb) { vb = C.vb[lamps] = Buf(W, H); vb.R.set(base.R); vb.S.set(base.S); vb.EM.set(base.EM); village(vb, lamps, H); }      // ground and village, with the lamplight, kept ready
+    b.R.set(vb.R); b.S.set(vb.S); b.EM.set(vb.EM); b.L.set(vb.L); b.ID.set(vb.ID); C.sm.fill(0); b.box = {}; b.clip = 0;
+    smoke(b, lamps, t, H);
     for (let i = 0; i < 10; i++) { const j = (Math.floor(t * 1.5) * 7 + i * 13) % 90, x = Math.round(hash(j, 1) * W), y = Math.round(hash(j, 2) * (C.CREST - 24)); if (x < W && base.R[y * W + x] === RI.white) b.put(x, y, 'white', 5, 0, 1); }
     blit(b, C.mistA, Math.floor(t * 5), C.CREST - 14);
     blit(b, C.mistB, Math.floor(-t * 3.5) + 200, Math.round(GY(H * 0.47)) - 12);
@@ -350,7 +365,7 @@
     const gid = (g) => 10 + (sc.giants.indexOf(g) % 40), gn = (g) => parseInt(String(g.id).slice(1), 10) || 0;
     hid.forEach((g) => giant(b, g, gid(g), t, C, gn(g)));
     // moon shadows, and the shadow of a foot coming down with its red rim
-    out.forEach((g) => { if (g.state === 'walk' || g.state === 'lean') { const s = g.big ? 1.25 : 1; shadow(C, g.x - 20 * s, GY(g.y) + 4, 34 * s, 11 * s); } });
+    out.forEach((g) => { if (g.state === 'walk' || g.state === 'lean' || g.state === 'through') { const s = g.big ? 1.25 : 1; shadow(C, g.x - 20 * s, GY(g.y) + 4, 34 * s, 11 * s); } });
     shadow(C, P.x - 6, GY(P.y) + 1, 9, 3);
     sc.prints.forEach((q) => { const r = (q.big ? 13 : 11) * (q.a > 6 ? 7 - q.a : 1); if (r > 2) shadow(C, q.x, GY(q.y), r, r * 0.55); });
     walking.forEach((g) => { const sr = g.big ? 31 : 26, ly = GY(g.landY), q = Math.min(1, g.st); shadow(C, g.landX, ly, sr * (0.35 + 0.65 * q), sr * K * (0.35 + 0.65 * q), 2); ringG(b, g.landX, ly, sr, K, 'red', q > 0.55 ? 5 : 3, q > 0.55 ? 0 : 4); });
@@ -367,10 +382,11 @@
     } else for (let i = 1; i < sc.trail.length; i++) rope(b, sc.trail[i - 1].x, GY(sc.trail[i - 1].y), sc.trail[i].x, GY(sc.trail[i].y), false);
     // everything that stands up, back to front
     const items = [];
-    sc.trees.forEach((c, i) => items.push({ y: c.y, f: () => pine(b, c.x, GY(c.y), 60 + i, hash(i, 91)) }));
-    out.forEach((g) => items.push({ y: g.state === 'walk' ? Math.max(g.feet[0].y, g.feet[1].y) : g.y + 2, f: () => giant(b, g, gid(g), t, C, gn(g)) }));
-    items.push({ y: P.y, f: () => hero(b, sc, t, C) });
+    sc.trees.forEach((c, i) => items.push({ y: c.y, f: () => stamp(b, C.pines[i], Math.round(c.x) - 27, Math.round(GY(c.y)) - 84, 60 + i) }));
+    out.forEach((g) => items.push({ y: g.state === 'walk' || g.state === 'through' ? Math.max(g.feet[0].y, g.feet[1].y) : g.y + 2, f: () => giant(b, g, gid(g), t, C, gn(g)) }));
+    items.push({ y: P.y, f: () => { hero(b, sc, t, C); const hx = Math.round(P.x), hy = Math.round(GY(P.y)); C.hp.length = 0; for (let y = Math.max(0, hy - 32); y <= Math.min(H - 1, hy + 3); y++) for (let x = Math.max(0, hx - 20); x <= Math.min(W - 1, hx + 20); x++) if (b.ID[y * W + x] === 2) C.hp.push(y * W + x); } });
     items.sort((a, c) => a.y - c.y).forEach((q) => q.f());
+    C.hp.forEach((i) => { if (b.ID[i] !== 2) { b.R[i] = RI.gold; b.S[i] = 3; b.EM[i] = 1; } });      // behind a giant or a tree you still show, as a plain shape
     // the rope where it is caught: wound on a trunk, looped round a giant's ankles; the lap you are running
     sc.trees.forEach((c) => { const y = Math.round(GY(c.y)); for (let k = 0; k < Math.max(c.rings, sc.wires.some((w) => w.a === c || w.b === c) ? 1 : 0); k++) { b.rect(c.x - 4, y - 7 - k * 3, 9, 2, 'rope', (px, py) => ((px + py) % 3 ? 5 : 3), 0, 1); } });
     walking.forEach((g) => { for (let k = 0; k < g.rings; k++) { ringG(b, g.x, GY(g.y) - 5 - k * 3, g.sp + 13, 0.42, 'rope', 5); ringG(b, g.x, GY(g.y) - 4 - k * 3, g.sp + 13, 0.42, 'rope', 3); } });
@@ -383,9 +399,8 @@
       else if (p.kind === 'chip') { b.rect(sx, sy - 1, 2, 2, 'rock', q < 0.5 ? 5 : 3); b.put(sx, sy + 1, 'ink', 1); }
       else { b.put(sx, sy, p.col, q < 0.5 ? 5 : 4, 0, 1); if (q < 0.6) { b.put(sx + 1, sy, p.col, 4, 0, 1); b.put(sx, sy + 1, p.col, 4, 0, 1); } }
     });
-    village(b, sc, t, C);
     // fireflies over the meadow
-    for (let i = 0; i < 12; i++) { const x = hash(i, 71) * W + Math.sin(t * 0.7 + i * 2) * 14, y = GY(60 + hash(i, 72) * (H - 180)) - 10 + Math.cos(t * 0.9 + i) * 6; if (Math.sin(t * 2.2 + i * 1.7) > -0.1) { b.put(x, y, 'gold', 5, 0, 1); glow(b, x, y + 8, 13, 1.1, K); } }
+    for (let i = 0; i < 12; i++) { const x = hash(i, 71) * W + Math.sin(t * 0.7 + i * 2) * 14, y = GY(60 + hash(i, 72) * (H - 180)) - 10 + Math.cos(t * 0.9 + i) * 6; if (Math.sin(t * 2.2 + i * 1.7) > -0.1) { b.put(x, y, 'gold', 5, 0, 1); b.put(x + 1, y, 'gold', 4, 0, 1); } }
     // light in clean steps: the ground and everything on it catch the lantern, the lamps and the heart stones
     const R8 = b.R, S8 = b.S, EM = b.EM, L = b.L, ID = b.ID, gm = C.gm, sm = C.sm, o32 = C.out32;
     // the end of the night: dawn climbs the sky band by band, or the meadow goes dark
@@ -419,28 +434,28 @@
       // a rope under the name, with a loop in it
       const pts = []; for (let u = 0; u <= 1; u += 0.004) { const a = u * TAU; pts.push(u < 0.42 || u > 0.58 ? [62 + u * 236, ly + 110 + Math.sin(u * 9) * 3] : [180 + Math.sin((u - 0.42) / 0.16 * TAU) * 13, ly + 110 - 13 + Math.cos((u - 0.42) / 0.16 * TAU) * 13 + Math.sin(0.42 * 9) * 3 * 0 + a * 0]); }
       blocks(ctx, pts.map(([x, y]) => [x - 1, y - 1]), '#04030a', 5); blocks(ctx, pts, '#94784a', 3); blocks(ctx, pts.filter((q, i) => i % 6 < 3), '#dcc088', 2);
-      if (Math.sin(t * 3) > -0.3) text(ctx, 'TAP TO START', 180, Math.round(H * 0.58), 2, '#ffffff');
+      if (Math.sin(t * 3) > -0.3) text(ctx, sc.touch ? 'TAP TO START' : 'CLICK TO START', 180, Math.round(H * 0.58), 2, '#ffffff');
       fade(); return;
     }
     // numbers and shouts that pop up where things happen
     sc.pops.forEach((q) => { if (q.t > 1.02 && Math.floor(q.t * 30) % 2) return; text(ctx, q.str, clamp(q.x, 14 + q.str.length * 3 * q.k, 346 - q.str.length * 3 * q.k), Math.round(GY(q.y) - 46 - Math.min(1, q.t / 0.45) * 20), q.t < 0.09 ? q.k + 1 : q.k, q.col); });
     // top bar: one small head for every giant of the night, the three lamps, the score
     panel(ctx, 8, 8, 344, 26);
-    const onField = sc.giants.filter((g) => g.state !== 'down').length;
+    const onField = sc.giants.filter((g) => g.state !== 'down' && g.state !== 'through').length;
     for (let i = 0; i < sc.TOTAL; i++) { const x = 15 + i * 10, col = i < sc.down ? '#ffd23a' : i < sc.down + sc.through ? '#c42636' : i < sc.down + sc.through + onField ? '#a4a8ba' : '#2a3050'; ctx.fillStyle = '#04030a'; ctx.fillRect(x, 14, 8, 14); ctx.fillStyle = col; ctx.fillRect(x + 1, 16, 6, 11); ctx.fillRect(x + 2, 15, 4, 1); ctx.fillStyle = '#04030a'; ctx.fillRect(x + 2, 19, 1, 2); ctx.fillRect(x + 5, 19, 1, 2); ctx.fillRect(x + 2, 23, 4, 1); }
     for (let i = 0; i < sc.LAMPS; i++) lampIcon(ctx, 170 + i * 17, 12, i < sc.LAMPS - sc.hits, 1);
     text(ctx, `${sc.score}`, 342, 14, 2, '#ffd23a', null, 'right');
-    sc.giants.forEach((g) => { if (g.state === 'walk' && g.need > 1 && g.y > 0) text(ctx, `${g.rings}/2`, g.x, Math.max(42, GY(g.y) - 136), 2, '#ffd23a'); });
+    sc.giants.forEach((g) => { if (g.state !== 'walk' || g.need < 2 || g.y <= 0) return; const y = Math.max(40, Math.round(GY(g.y)) - 134); for (let i = 0; i < 2; i++) { const x = Math.round(g.x) - 12 + i * 14; ctx.fillStyle = '#04030a'; ctx.fillRect(x, y + 2, 10, 6); ctx.fillRect(x + 2, y, 6, 10); ctx.fillStyle = i < g.rings ? '#ffd23a' : '#564c6e'; ctx.fillRect(x + 1, y + 3, 8, 4); ctx.fillRect(x + 3, y + 1, 4, 8); if (i >= g.rings) { ctx.fillStyle = '#04030a'; ctx.fillRect(x + 3, y + 3, 4, 4); } } });      // a big one needs two rings: two loops, filled as you make them
     if (sc.showStick && sc.stick && sc.state === 'playing') {     // where your thumb is steering from
       const r = [], kn = sc.stickNow || sc.stick; for (let i = 0; i < 28; i++) r.push([sc.stick.x + Math.cos(i / 28 * TAU) * 32 - 1, sc.stick.y + Math.sin(i / 28 * TAU) * 32 - 1]);
       ctx.globalAlpha = 0.3; blocks(ctx, r, '#f4ecd8', 2); ctx.fillStyle = '#f4ecd8'; ctx.fillRect(Math.round(kn.x) - 5, Math.round(kn.y) - 3, 10, 6); ctx.fillRect(Math.round(kn.x) - 3, Math.round(kn.y) - 5, 6, 10); ctx.globalAlpha = 1;
     }
     if (sc.state === 'playing') {
       const blink = Math.sin(t * 4) > -0.6;
-      if (!sc.moved) { if (blink) text(ctx, 'DRAG TO RUN', P.x, GY(P.y) + 14, 2, '#f4ecd8'); }
+      if (!sc.moved) { if (blink) text(ctx, sc.touch ? 'DRAG TO RUN' : 'ARROW KEYS OR DRAG', clamp(P.x, 112, 248), GY(P.y) + 14, 2, '#f4ecd8'); }
       else if (ready) text(ctx, sc.tight ? 'PULL!' : 'NOW RUN AWAY!', clamp(P.x, 90, 270), GY(P.y) - 50, 2, '#fff1b0');
       else if (!sc.firstRing && sc.giants.some((g) => g.state === 'walk' && g.y > 20)) { if (blink) text(ctx, 'RUN A RING ROUND ITS LEGS', 180, H - 104, 2, '#fff1b0'); }
-      else if (sc.tipT > 0 && sc.tipT < 7 && !sc.wires.length && !(last && last.kind === 'tree')) text(ctx, 'TIP: A ROPE BETWEEN TWO TREES', 180, H - 104, 2, '#8a92b4');
+      else if (sc.tipT > 0 && sc.tipT < 7 && !sc.wires.length && !(last && last.kind === 'tree')) text(ctx, 'RING TWO TREES: A TRIPWIRE', 180, H - 104, 2, '#8a92b4');
       if (sc.msg) text(ctx, sc.msg.str, 180, 44, 2, sc.msg.col);
       else if (last && last.kind === 'tree') text(ctx, 'NOW RING ANOTHER TREE', 180, 44, 2, '#fff1b0');
       fade(); return;
@@ -449,13 +464,14 @@
     const won = sc.state === 'won', y = Math.round(H * 0.3), e = sc.endT;
     ctx.fillStyle = `rgba(4,6,18,${Math.min(won ? 0.25 : 0.55, e * 0.5)})`; ctx.fillRect(0, 0, 360, H);
     if (e > 0.7) {
-      panel(ctx, 34, y, 292, 178);
+      panel(ctx, 34, y, 292, 188);
       text(ctx, won ? 'DAWN!' : 'DARKNESS', 180, y + 14, 4, won ? '#ffd23a' : '#ec5550', null);
       text(ctx, won ? 'THE VILLAGE IS SAFE' : 'THE VILLAGE WENT DARK', 180, y + 50, 2, '#cbbfa8', null);
       for (let i = 0; i < sc.LAMPS; i++) if (e > 1 + i * 0.22) lampIcon(ctx, 124 + i * 44, y + 72, i < sc.LAMPS - sc.hits, 2);
       text(ctx, `SCORE ${Math.round(sc.score * clamp((e - 1.1) / 0.7, 0, 1))}`, 180, y + 118, 3, '#f4ecd8', null);
-      text(ctx, `${sc.down}/${sc.TOTAL} GIANTS    BEST PULL ${sc.bestCombo}`, 180, y + 148, 2, '#8a92b4', null);
-      if (e > 1.8 && Math.sin(t * 4) > -0.3) text(ctx, 'TAP TO PLAY AGAIN', 180, y + 196, 2, '#ffffff');
+      text(ctx, `${sc.down} OF ${sc.TOTAL} GIANTS DOWN`, 180, y + 148, 2, '#8a92b4', null);
+      text(ctx, `BEST PULL: ${sc.bestCombo}`, 180, y + 166, 2, '#8a92b4', null);
+      if (e > 1.8 && Math.sin(t * 4) > -0.3) text(ctx, sc.touch ? 'TAP TO PLAY AGAIN' : 'CLICK TO PLAY AGAIN', 180, y + 204, 2, '#ffffff');
     }
     fade();
   }

@@ -202,3 +202,15 @@ Every decision: date, what, why, sources. Newest first.
 - Look: ground repainted (haze under the ridge, long moonlit swells, shadow strokes, grass clumps, flower patches, a rutted track) instead of blotches; pines of different sizes; giants with thicker legs, knees and sway; hero with a four-step run, breathing, blinking, hood streaming, leaning back on a tight rope; thicker two-tone rope.
 - Interface: a two-line logo with a rope under it instead of sentences on a dark overlay; top bar shows one small head per giant (waiting, on the field, down, got through), lamp icons and score; lessons appear when they apply ("DRAG TO RUN", a turning dashed ring round the first giant with "RUN A RING ROUND ITS LEGS", "NOW RUN AWAY!", one tripwire tip after the first fall); end panel with the lamps you kept, a counting score, and dawn climbing the sky on a win or the meadow going dark on a loss; a faint thumb-stick marker.
 - Checked: bots (idle, spam, hold, random lose at 36 s; ringing bot wins all runs), phone-size and desktop at 60 fps, title/win/lose screens by screenshot. Not checkable by me: whether it now feels right in the hand. Still open: every night is the same, a fallen giant's pose is stiff, the hero has one facing (left/right).
+
+## 2026-11-24 — Tanglefoot: review for my own mistakes, and fixes
+Thomas asked for a review of mistakes. Method: read the logic, then stage awkward situations in the real page and look at the screenshots; measure the cost of one frame against Night Ferry.
+Found and fixed:
+- You disappeared behind a giant or a tree (tall sprites, tilted view) exactly while running a ring. Now a plain gold shape of you shows through.
+- A giant that reached the village simply vanished. Now it tramples on through the houses and out of the picture; the lamp goes out as before.
+- One frame cost about twice Night Ferry's with a busy field (13.9 ms against 7.2 ms on the test machine): thick limbs were drawn many times over, lights used slow maths, village and trees were redrawn every frame. Now 7.6 ms with five giants.
+- The thumb direction did not match the direction on screen, because the ground is tilted and I steered in ground units. Now the screen direction is the thumb direction (bots adjusted).
+- "Play again" went back to the title, so a retry cost two taps. Now straight back into the night.
+- A heart stone still behind the ridge lit a patch of grass in front of it. The end panel's last line ran outside the panel. "0/2" over big giants explained nothing (now two loops that fill). The tree tip was vague (now "RING TWO TREES: A TRIPWIRE"). Desktop got touch wording and no hint that arrow keys work. A giant that fell on the houses was drawn under them. Firefly light made wandering blobs on the grass.
+Found, not fixed: giants walk straight through trees; a giant falling towards the camera still reads oddly for a moment; every night is identical; sound cannot be judged by me; real phone speed is estimated from a slowed-down desktop, not measured.
+Checked after the fixes: bots (idle, spam, hold, random lose at 36 s; ringing bot wins all runs), phone-size and desktop pages at 60 fps without errors.
