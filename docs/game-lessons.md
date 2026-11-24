@@ -49,3 +49,4 @@ Read before starting a new game. Newest game first; each lesson says what to do 
 - Count the letters: at text size 2 a line holds 29 characters, less inside a panel.
 - Play the retry path: from the end screen back into play must be one tap.
 - With a tilted ground, steer in screen directions and convert to ground, not the other way round.
+- Look at the picture itself, not only at situations: exact pixel size, cut into regions, enlarged three times, normal and tall screen. Colours borrowed from another part of the palette (cloud blue for dust), things painted "on top so they are visible" (rope loops), and anything laid flat that should stand up (mist) only show up this way.

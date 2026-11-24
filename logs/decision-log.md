@@ -214,3 +214,15 @@ Found and fixed:
 - A heart stone still behind the ridge lit a patch of grass in front of it. The end panel's last line ran outside the panel. "0/2" over big giants explained nothing (now two loops that fill). The tree tip was vague (now "RING TWO TREES: A TRIPWIRE"). Desktop got touch wording and no hint that arrow keys work. A giant that fell on the houses was drawn under them. Firefly light made wandering blobs on the grass.
 Found, not fixed: giants walk straight through trees; a giant falling towards the camera still reads oddly for a moment; every night is identical; sound cannot be judged by me; real phone speed is estimated from a slowed-down desktop, not measured.
 Checked after the fixes: bots (idle, spam, hold, random lose at 36 s; ringing bot wins all runs), phone-size and desktop pages at 60 fps without errors.
+
+## 2026-11-24 — Tanglefoot look 5: visual faults I had missed
+Thomas: "there are still some obvious visual mistakes you have missed". The earlier review checked situations, not the picture. This time: the picture at exact pixel size, cut into regions and enlarged three times, on a normal and a tall phone screen.
+Found and fixed:
+- Dust under the giants and chimney smoke were drawn in the sky's cloud colours, so they looked like blue bubbles. Now grey dust and thin grey plumes.
+- The rope loop round a giant's ankles, and the rope wound on a trunk, were painted on top of everything, so they showed through a giant standing in front. Now they belong to their giant or tree: far half behind the legs, near half in front.
+- Rope turned into a dark line whenever it ran upwards (each piece painted its dark underside over the piece before). Ropes are now drawn as one piece.
+- Mist bands lay on the meadow like flat blue bars and puddles at the ridge. Mist now drifts between the far mountains and the pines, where it reads as mist.
+- The title's rope loop cut through the letters of FOOT. It is now a lasso beside the name.
+- The tripwire was a white bar; now a taut rope. Small pine cones on the giants' shoulders read as spikes; removed. Cyan flowers read as stray sparkles; replaced. Houses and lamp posts were cut off by the bottom edge; moved up. The thumb marker was a ring of loose dots with a square; now a clean ring and round knob. Footprints lingered as dark holes; shorter and smaller.
+Still not right: a giant that gets through stands on the roofs as it walks out; giants pass through trees; a fall towards the camera is awkward.
+Bots and page tests unchanged (pass, 60 fps).

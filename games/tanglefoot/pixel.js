@@ -37,6 +37,7 @@
     grass: ['#060c0a', '#0a1610', '#102016', '#182c1c', '#223a24', '#2e4a2c'],
     dawnA: ['#10143a', '#181a44', '#24204e', '#342858', '#48305e', '#603a62'],
     dawnB: ['#7c4664', '#9a5466', '#b86866', '#d48262', '#eaa262', '#f8c878'],
+    dust: ['#1a181c', '#2a272c', '#3e3a40', '#57525a', '#766f76', '#9a9296'],
     meadow: ['#0a1526', '#0e2030', '#142e3a', '#1c4040', '#2a5a40', '#447844'],
     leaf: ['#040c12', '#08181c', '#0e2826', '#163a30', '#22503a', '#34704a'],
     rock: ['#12121e', '#232434', '#383a4e', '#53566c', '#767a90', '#a4a8ba'],
@@ -167,7 +168,12 @@
   function arcG(b, x, y, r, K, a0, da, ramp, sh) { const n = Math.max(2, Math.round(Math.abs(da) * r)); for (let i = 0; i <= n; i++) { const a = a0 + da * i / n; for (let w = 0; w < 2; w++) b.put(x + Math.cos(a) * (r + w), y + Math.sin(a) * (r + w) * K, ramp, sh, 0, 1); } }
   function glow(b, x, y, r, s, K) { const W = b.W, H = b.H, x0 = Math.max(0, Math.floor(x - r)), x1 = Math.min(W - 1, Math.ceil(x + r)), y0 = Math.max(0, Math.floor(y - r * K)), y1 = Math.min(H - 1, Math.ceil(y + r * K)); const r2 = r * r; for (let py = y0; py <= y1; py++) { const ey = (py - y) / K, e2 = ey * ey; for (let px = x0; px <= x1; px++) { const d2 = (px - x) * (px - x) + e2; if (d2 < r2) b.L[py * W + px] += s * FALL[(Math.sqrt(d2 / r2) * 256) | 0]; } } }
   function shadow(C, cx, cy, rx, ry, n = 1) { const W = 360, H = C.H, sm = C.sm; for (let py = Math.max(0, Math.floor(cy - ry)); py <= Math.min(H - 1, Math.ceil(cy + ry)); py++) for (let px = Math.max(0, Math.floor(cx - rx)); px <= Math.min(W - 1, Math.ceil(cx + rx)); px++) { const nx = (px + 0.5 - cx) / rx, ny = (py + 0.5 - cy) / ry; if (nx * nx + ny * ny <= 1 && sm[py * W + px] < n) sm[py * W + px] = n; } }
-  function rope(b, x0, y0, x1, y1, tight) { const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0))); for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); const tw = ((x + y * 2) % 6 + 6) % 6 < 2; b.put(x, y + 1, 'ink', 1); b.put(x, y, tight ? 'cream' : 'rope', tight ? 3 : tw ? 2 : 3, 0, 1); b.put(x, y - 1, tight ? 'cream' : 'rope', tight ? 5 : tw ? 4 : 5, 0, 1); } }
+  // a rope through a list of points: the dark underside of the whole rope first, then its strands, so no piece paints over another
+  function rope(b, pts, tight) {
+    const each = (fn) => { for (let k = 1; k < pts.length; k++) { const [x0, y0] = pts[k - 1], [x1, y1] = pts[k], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0))); for (let i = 0; i <= n; i++) fn(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n)); } };
+    each((x, y) => b.put(x, y + 1, 'ink', 1));
+    each((x, y) => { const tw = ((x + y * 2) % 6 + 6) % 6 < 2; b.put(x, y, tight ? 'cream' : 'rope', tight ? 3 : tw ? 2 : 3, 0, 1); b.put(x, y - 1, tight ? 'cream' : 'rope', tight ? 5 : tw ? 4 : 5, 0, 1); });
+  }
   function limb(b, x0, y0, x1, y1, t, ramp, sh, id) {
     const h = t / 2, dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy || 1, r = RI[ramp], f = typeof sh === 'function';
     for (let py = Math.floor(Math.min(y0, y1) - h); py <= Math.ceil(Math.max(y0, y1) + h); py++) for (let px = Math.floor(Math.min(x0, x1) - h); px <= Math.ceil(Math.max(x0, x1) + h); px++) {
@@ -220,7 +226,7 @@
     // short strokes of shadow between the blades, clumps of longer grass, a few patches of flowers, stones, pebbles along the track
     for (let i = 0; i < 560; i++) { const x = Math.round(hash(i, 51) * W), y = Math.round(CREST + 12 + hash(i, 52) * (H - CREST - 70)), len = 3 + Math.floor(hash(i, 53) * 5); if (!onGrass(x, y) || !onGrass(x + len, y)) continue; const s0 = Math.max(0, g.S[y * W + x] - 1); for (let q = 0; q < len; q++) g.put(x + q, y, 'meadow', s0); }
     for (let c = 0; c < 46; c++) { const cx = hash(c, 31) * W, cy = CREST + 16 + hash(c, 32) * (H - CREST - 84); for (let j = 0; j < 7; j++) { const x = Math.round(cx + (hash(c * 9 + j, 33) - 0.5) * 28), y = Math.round(cy + (hash(c * 9 + j, 34) - 0.5) * 11); if (!onGrass(x, y) || !onGrass(x, y - 3)) continue; const s0 = g.S[y * W + x] + 1; g.put(x, y, 'meadow', s0); g.put(x - 1, y - 1, 'meadow', s0); g.put(x + 1, y - 1, 'meadow', s0); g.put(x - 2, y - 2, 'meadow', s0 + 1); g.put(x + 1, y - 2, 'meadow', s0); g.put(x + 2, y - 3, 'meadow', s0 + 1); } }
-    for (let c = 0; c < 9; c++) { const cx = hash(c, 35) * W, cy = CREST + 30 + hash(c, 36) * (H - CREST - 110), col = ['cream', 'sp2', 'sp1', 'sp4'][c % 4]; for (let j = 0; j < 5; j++) { const x = Math.round(cx + (hash(c * 7 + j, 37) - 0.5) * 24), y = Math.round(cy + (hash(c * 7 + j, 38) - 0.5) * 10); if (!onGrass(x, y) || !onGrass(x, y - 3)) continue; g.put(x, y, 'meadow', 3); g.put(x, y - 1, 'meadow', 3); g.put(x, y - 2, col, 3); g.put(x - 1, y - 2, col, 2); g.put(x + 1, y - 2, col, 2); g.put(x, y - 3, col, 2); } }
+    for (let c = 0; c < 9; c++) { const cx = hash(c, 35) * W, cy = CREST + 30 + hash(c, 36) * (H - CREST - 110), col = ['cream', 'sp2', 'gold', 'sp4'][c % 4]; for (let j = 0; j < 5; j++) { const x = Math.round(cx + (hash(c * 7 + j, 37) - 0.5) * 24), y = Math.round(cy + (hash(c * 7 + j, 38) - 0.5) * 10); if (!onGrass(x, y) || !onGrass(x, y - 3)) continue; g.put(x, y, 'meadow', 3); g.put(x, y - 1, 'meadow', 3); g.put(x, y - 2, col, 3); g.put(x - 1, y - 2, col, 2); g.put(x + 1, y - 2, col, 2); g.put(x, y - 3, col, 2); } }
     for (let i = 0; i < 16; i++) { const x = hash(i, 38) * W, y = CREST + 24 + hash(i, 39) * (H - CREST - 96), r = 3 + hash(i, 40) * 5; if (!onGrass(Math.round(x), Math.round(y))) continue; g.ell(x - 2, y + 2, r + 1, r * 0.5, 'meadow', 0); g.ell(x, y, r, r * 0.62, 'rock', (px, py, nx, ny) => (ny > 0.5 ? 1 : nx * 0.5 - ny * 0.8 > 0.3 ? 4 : nx * 0.5 - ny * 0.8 > -0.2 ? 3 : 2)); }
     for (let i = 0; i < 70; i++) { const gy = 10 + hash(i, 47) * (H - 80), x = Math.round(pathX(gy) + (i % 2 ? 1 : -1) * (10 + hash(i, 48) * 4)), y = Math.round(HZ + gy * K); if (y > CREST + 8) { g.put(x, y, 'rock', 3); g.put(x + 1, y, 'rock', 2); } }
     // the trees stand still, so their moon shadows are part of the ground
@@ -256,6 +262,8 @@
     const bob = up ? (g.land > 0 ? g.land / 0.2 * 4 : 0) - step * 2 : 0, sway = walks ? (g.feet[1 - g.foot].x - cx) * 0.25 : 0;
     const T = (h, al) => [cx + (h ? sway * (1 - k) : 0) + g.dir.x * al * k * s, cy - h * s * (1 - k) + (h ? bob : 0) + g.dir.y * al * k * s * K];   // standing: above the feet; lying: along the fall
     const F = g.feet.map((q, i) => [q.x, GY(q.y) - (i === g.foot ? step * 9 : 0)]);
+    const loop = (front) => { for (let q = 0; q < (st === 'walk' ? g.rings : 0); q++) { const rx = g.sp + 14, n = Math.round(rx * 5.4); for (let i = 0; i < n; i++) { const a = i / n * TAU, sn = Math.sin(a); if ((sn > 0) !== front) continue; const x = Math.round(cx + Math.cos(a) * rx), y = Math.round(cy - 5 - q * 3 + sn * rx * 0.42); b.put(x, y + 1, 'rope', 2, 0, 1); b.put(x, y, 'rope', (x + i) % 5 < 2 ? 4 : 5, 0, 1); } } };
+    loop(false);
     const [hpx, hpy] = T(24, 34);
     F.forEach(([fx, fy], i) => { const ex = hpx + (i ? -9 : 9) * s * (1 - k); limb(b, fx, fy - 5, ex, hpy, 11 * s, 'rock', (q) => (q > 0.5 ? 2 : 3), id); b.ell((fx + ex) / 2 + (i ? -1 : 1) * s, (fy - 5 + hpy) / 2, 7 * s, 6 * s, 'rock', (px, py, nx, ny) => (ny < -0.3 ? 4 : 3), id); });
     F.forEach(([fx, fy]) => { b.ell(fx, fy - 2, 11 * s, 6.5 * s, 'rock', (px, py, nx, ny) => (ny < -0.25 ? 4 : nx > 0.3 ? 3 : 2), id); b.ell(fx - 2, fy - 6 * s, 5 * s, 2.2 * s, 'leaf', 3, id); });
@@ -271,7 +279,6 @@
       if (Math.abs(nx * 0.5 - ny * 0.9 + 0.52) < 0.035 && nx < -0.15 && ny > -0.1) return RK + 1;
       return RK + (l > 0.5 ? 4 : l > 0 ? 3 : l > -0.5 ? 2 : 1);
     }, id);
-    if (up) { b.poly([[tx - 20 * s, ty - 16 * s], [tx - 16 * s, ty - 31 * s], [tx - 11 * s, ty - 16 * s]], 'leaf', (px) => (px > tx - 16 * s ? 4 : 2), id); if (g.big) b.poly([[tx + 13 * s, ty - 16 * s], [tx + 17 * s, ty - 28 * s], [tx + 21 * s, ty - 15 * s]], 'leaf', (px) => (px > tx + 17 * s ? 4 : 2), id); }
     // the heart stone: each giant glows in its own colour, and the glow lies round its feet
     const gx = Math.round(tx + (up ? g.hx * 5 * s : 0)), gyy = Math.round(ty + 3 * s), gem = GEM[n % 4], alive = st !== 'down';
     for (let dy = -5; dy <= 5; dy++) { const w = Math.round(3.4 * (1 - Math.abs(dy) / 5.6)); for (let dx = -w; dx <= w; dx++) b.put(gx + dx, gyy + dy, alive ? gem : 'ink', alive ? (dx === 0 && Math.abs(dy) < 3 ? 5 : dx < 0 ? 3 : 4) : 2, id, alive ? 1 : 0); }
@@ -291,6 +298,7 @@
       b.rect(ex - ew, hy + Math.round(6 * s), ew * 2 + 1, 1, 'ink', 1, id); b.put(ex - ew + 1, hy + Math.round(6 * s) - 1, 'cream', 4, id); b.put(ex + ew - 1, hy + Math.round(6 * s) - 1, 'cream', 4, id);
     }
     b.outline(id);
+    loop(true);
     if (alive) { if (!b.clip || gyy < b.clip - 4) b.light(gx, gyy, 30 * s, 1.5); if (!sink) glow(b, cx, cy, 50 * s, 1.5, K); }     // a heart stone still behind the ridge lights nothing on this side
     b.clip = 0;
   }
@@ -321,7 +329,7 @@
 
   function village(b, lamps, H) {
     [10, 100, 216, 306].forEach((x, i) => {
-      const id = 80 + i, y = H - 30, lit = [0, 1, 1, 2][i] < lamps || (i === 1 && lamps > 0);
+      const id = 80 + i, y = H - 36, lit = [0, 1, 1, 2][i] < lamps || (i === 1 && lamps > 0);
       b.rect(x + 30, y - 30, 7, 14, 'rock', (px) => (px > x + 33 ? 3 : 2), id);
       b.rect(x + 3, y, 38, 30, 'cream', (px, py) => (py < y + 3 ? 0 : px > x + 30 ? 2 : 1), id);
       b.rect(x + 3, y, 2, 30, 'wood', 2, id); b.rect(x + 39, y, 2, 30, 'wood', 3, id); b.rect(x + 3, y + 14, 38, 2, 'wood', 2, id); b.rect(x + 21, y, 2, 30, 'wood', 2, id);
@@ -334,22 +342,22 @@
     });
     [78, 181, 284].forEach((x, k) => {     // the three lamps of the village
       const id = 90 + k, on = k < lamps;
-      b.rect(x - 1, H - 32, 3, 32, 'wood', (px) => (px > x ? 3 : 2), id); b.rect(x - 3, H - 2, 7, 2, 'wood', 1, id);
-      if (on) lantern(b, x, H - 50, id, 0.9);
-      else { b.line(x, H - 55, x, H - 50, 'ink', 1, 1, id); b.rect(x - 6, H - 50, 13, 3, 'ink', 2, id); b.rect(x - 5, H - 47, 11, 12, 'ink', 1, id); b.rect(x - 6, H - 35, 13, 3, 'ink', 2, id); }
+      b.rect(x - 1, H - 38, 3, 32, 'wood', (px) => (px > x ? 3 : 2), id); b.rect(x - 3, H - 8, 7, 2, 'wood', 1, id);
+      if (on) lantern(b, x, H - 56, id, 0.9);
+      else { b.line(x, H - 61, x, H - 56, 'ink', 1, 1, id); b.rect(x - 6, H - 56, 13, 3, 'ink', 2, id); b.rect(x - 5, H - 53, 11, 12, 'ink', 1, id); b.rect(x - 6, H - 41, 13, 3, 'ink', 2, id); }
       b.outline(id, false);
     });
   }
 
-  function smoke(b, lamps, t, H) {
-    [10, 100, 216, 306].forEach((x, i) => { if (!([0, 1, 1, 2][i] < lamps || (i === 1 && lamps > 0))) return; for (let n = 0; n < 3; n++) { const q = (t * 0.3 + n / 3 + i * 0.37) % 1; if (q < 0.92) b.ell(x + 34 + Math.sin(q * 5 + i) * 3 + q * 9, H - 63 - q * 26, 2 + q * 3.5, 1.6 + q * 2.4, 'cloud', q < 0.5 ? 3 : 2); } });
+  function smoke(b, lamps, t, H) {      // a thin grey plume from each lit house, leaning with the wind
+    [10, 100, 216, 306].forEach((x, i) => { if (!([0, 1, 1, 2][i] < lamps || (i === 1 && lamps > 0))) return; for (let n = 0; n < 6; n++) { const q = (t * 0.22 + n / 6 + i * 0.37) % 1, r = 1.6 + q * 3.2; if (q < 0.9) b.ell(x + 33 + q * q * 16 + Math.sin(q * 6 + i) * 1.5, H - 68 - q * 30, r * 1.25, r * 0.8, 'dust', q < 0.35 ? 3 : q < 0.7 ? 2 : 1); } });
   }
 
   function frame(sc, ctx) {
     const W = 360, H = sc.H, t = sc.t, P = sc.p, ch = sc.chain, last = ch[ch.length - 1];
     if (!cache || cache.H !== H) {
       const HZ = sc.HZ, K = sc.K, CREST = HZ - 14, base = buildBase(W, H, HZ, K, CREST, sc.trees);
-      cache = { H, HZ, K, CREST, base: base.g, gm: base.gm, sm: new Uint8Array(W * H), b: Buf(W, H), img: ctx.createImageData(W, H), mistA: mistTile(720, 30, 20, 30, 3, 2), mistB: mistTile(720, 26, 16, 24, 6, 1), face: 1, vb: {}, hp: [], pines: sc.trees.map((c, i) => { const tl = Buf(54, 88); pine(tl, 27, 84, 1, hash(i, 91)); return tl; }) };
+      cache = { H, HZ, K, CREST, base: base.g, gm: base.gm, sm: new Uint8Array(W * H), b: Buf(W, H), img: ctx.createImageData(W, H), mistA: mistTile(720, 30, 20, 34, 3, 2), face: 1, vb: {}, hp: [], pines: sc.trees.map((c, i) => { const tl = Buf(54, 88); pine(tl, 27, 84, 1, hash(i, 91)); return tl; }) };
       cache.out32 = new Uint32Array(cache.img.data.buffer);
     }
     const C = cache, b = C.b, base = C.base, K = C.K, HZ = C.HZ, GY = (y) => HZ + y * K;
@@ -359,43 +367,41 @@
     b.R.set(vb.R); b.S.set(vb.S); b.EM.set(vb.EM); b.L.set(vb.L); b.ID.set(vb.ID); C.sm.fill(0); b.box = {}; b.clip = 0;
     smoke(b, lamps, t, H);
     for (let i = 0; i < 10; i++) { const j = (Math.floor(t * 1.5) * 7 + i * 13) % 90, x = Math.round(hash(j, 1) * W), y = Math.round(hash(j, 2) * (C.CREST - 24)); if (x < W && base.R[y * W + x] === RI.white) b.put(x, y, 'white', 5, 0, 1); }
-    blit(b, C.mistA, Math.floor(t * 5), C.CREST - 14);
-    blit(b, C.mistB, Math.floor(-t * 3.5) + 200, Math.round(GY(H * 0.47)) - 12);
+    { const tile = C.mistA, off = Math.floor(t * 4), y0 = C.CREST - 40, HL = RI.hill; for (let y = 0; y < tile.H; y++) { const dy = y + y0; if (dy < 0) continue; for (let x = 0; x < W; x++) { const si = y * tile.W + ((x + off) % tile.W), di = dy * W + x; if (tile.R[si] >= 0 && b.R[di] === HL) { b.R[di] = tile.R[si]; b.S[di] = tile.S[si]; } } } }      // mist drifting in front of the far mountains, behind the pines
     const hid = sc.giants.filter((g) => g.y < -4), out = sc.giants.filter((g) => g.y >= -4), walking = out.filter((g) => g.state === 'walk');
     const gid = (g) => 10 + (sc.giants.indexOf(g) % 40), gn = (g) => parseInt(String(g.id).slice(1), 10) || 0;
     hid.forEach((g) => giant(b, g, gid(g), t, C, gn(g)));
     // moon shadows, and the shadow of a foot coming down with its red rim
     out.forEach((g) => { if (g.state === 'walk' || g.state === 'lean' || g.state === 'through') { const s = g.big ? 1.25 : 1; shadow(C, g.x - 20 * s, GY(g.y) + 4, 34 * s, 11 * s); } });
     shadow(C, P.x - 6, GY(P.y) + 1, 9, 3);
-    sc.prints.forEach((q) => { const r = (q.big ? 13 : 11) * (q.a > 6 ? 7 - q.a : 1); if (r > 2) shadow(C, q.x, GY(q.y), r, r * 0.55); });
+    sc.prints.forEach((q) => { const r = (q.big ? 11 : 9) * (q.a > 3 ? 4 - q.a : 1); if (r > 2) shadow(C, q.x, GY(q.y), r, r * 0.55); });
     walking.forEach((g) => { const sr = g.big ? 31 : 26, ly = GY(g.landY), q = Math.min(1, g.st); shadow(C, g.landX, ly, sr * (0.35 + 0.65 * q), sr * K * (0.35 + 0.65 * q), 2); ringG(b, g.landX, ly, sr, K, 'red', q > 0.55 ? 5 : 3, q > 0.55 ? 0 : 4); });
     // on the ground: tripwires, where the roped giant will fall, the rope
-    sc.wires.forEach((w) => { rope(b, w.a.x, GY(w.a.y) - 6, w.b.x, GY(w.b.y) - 6, true); });
+    sc.wires.forEach((w) => rope(b, [[w.a.x, GY(w.a.y) - 6], [w.b.x, GY(w.b.y) - 6]], false));
     const ready = last && last.kind === 'giant' && last.rings >= last.need;
     if (ready) { const dx = P.x - last.x, dy = P.y - last.y, d = Math.hypot(dx, dy) || 1; for (let q = 34; q <= 132; q += 7) b.put(last.x - dx / d * q, GY(last.y - dy / d * q), 'gold', 4, 0, 1); ringG(b, last.x - dx / d * 140, GY(last.y - dy / d * 140), 9, K, 'gold', 4, 4); if (!sc.tight) ringG(b, last.x, GY(last.y), sc.LEASH + (last.big ? 10 : 0), K, 'cream', 2, 6); }
     const hand = [P.x - C.face * 6, GY(P.y) - 8], peg = (c) => [c.x, GY(c.y) - (c.kind === 'tree' ? 6 : 4)];
     if (ch.length) {
-      for (let i = 1; i < ch.length; i++) rope(b, ...peg(ch[i - 1]), ...peg(ch[i]), false);
+      if (ch.length > 1) rope(b, ch.map(peg), false);
       const [ax, ay] = peg(last), dx = hand[0] - ax, dy = hand[1] - ay, d = Math.hypot(P.x - last.x, P.y - last.y) || 1, leash = last.kind === 'tree' ? sc.TREE_LEASH : sc.LEASH + (last.big ? 10 : 0), slack = clamp(1 - d / leash, 0, 1), dd = Math.hypot(dx, dy) || 1;
-      const mx = (ax + hand[0]) / 2 - dy / dd * slack * 30, my = (ay + hand[1]) / 2 + dx / dd * slack * 30 + slack * 6; let px = ax, py = ay;
-      for (let i = 1; i <= 16; i++) { const u = i / 16, x = (1 - u) * (1 - u) * ax + 2 * u * (1 - u) * mx + u * u * hand[0], y = (1 - u) * (1 - u) * ay + 2 * u * (1 - u) * my + u * u * hand[1]; rope(b, px, py, x, y, sc.tight); px = x; py = y; }
-    } else for (let i = 1; i < sc.trail.length; i++) rope(b, sc.trail[i - 1].x, GY(sc.trail[i - 1].y), sc.trail[i].x, GY(sc.trail[i].y), false);
+      const mx = (ax + hand[0]) / 2 - dy / dd * slack * 30, my = (ay + hand[1]) / 2 + dx / dd * slack * 30 + slack * 6; const curve = [[ax, ay]];
+      for (let i = 1; i <= 16; i++) { const u = i / 16; curve.push([(1 - u) * (1 - u) * ax + 2 * u * (1 - u) * mx + u * u * hand[0], (1 - u) * (1 - u) * ay + 2 * u * (1 - u) * my + u * u * hand[1]]); }
+      rope(b, curve, sc.tight);
+    } else if (sc.trail.length > 1) rope(b, sc.trail.map((q) => [q.x, GY(q.y)]), false);
     // everything that stands up, back to front
     const items = [];
-    sc.trees.forEach((c, i) => items.push({ y: c.y, f: () => stamp(b, C.pines[i], Math.round(c.x) - 27, Math.round(GY(c.y)) - 84, 60 + i) }));
+    sc.trees.forEach((c, i) => items.push({ y: c.y, f: () => { const x = Math.round(c.x), y = Math.round(GY(c.y)); stamp(b, C.pines[i], x - 27, y - 84, 60 + i); for (let k = 0; k < Math.max(c.rings, sc.wires.some((w) => w.a === c || w.b === c) ? 2 : 0); k++) { b.rect(x - 4, y - 5 - k * 3, 9, 1, 'rope', (px) => (px % 3 ? 5 : 4), 60 + i, 1); b.rect(x - 4, y - 4 - k * 3, 9, 1, 'rope', 2, 60 + i, 1); } } }));
     out.forEach((g) => items.push({ y: g.state === 'walk' || g.state === 'through' ? Math.max(g.feet[0].y, g.feet[1].y) : g.y + 2, f: () => giant(b, g, gid(g), t, C, gn(g)) }));
     items.push({ y: P.y, f: () => { hero(b, sc, t, C); const hx = Math.round(P.x), hy = Math.round(GY(P.y)); C.hp.length = 0; for (let y = Math.max(0, hy - 32); y <= Math.min(H - 1, hy + 3); y++) for (let x = Math.max(0, hx - 20); x <= Math.min(W - 1, hx + 20); x++) if (b.ID[y * W + x] === 2) C.hp.push(y * W + x); } });
     items.sort((a, c) => a.y - c.y).forEach((q) => q.f());
     C.hp.forEach((i) => { if (b.ID[i] !== 2) { b.R[i] = RI.gold; b.S[i] = 3; b.EM[i] = 1; } });      // behind a giant or a tree you still show, as a plain shape
     // the rope where it is caught: wound on a trunk, looped round a giant's ankles; the lap you are running
-    sc.trees.forEach((c) => { const y = Math.round(GY(c.y)); for (let k = 0; k < Math.max(c.rings, sc.wires.some((w) => w.a === c || w.b === c) ? 1 : 0); k++) { b.rect(c.x - 4, y - 7 - k * 3, 9, 2, 'rope', (px, py) => ((px + py) % 3 ? 5 : 3), 0, 1); } });
-    walking.forEach((g) => { for (let k = 0; k < g.rings; k++) { ringG(b, g.x, GY(g.y) - 5 - k * 3, g.sp + 13, 0.42, 'rope', 5); ringG(b, g.x, GY(g.y) - 4 - k * 3, g.sp + 13, 0.42, 'rope', 3); } });
     sc.trees.concat(walking).forEach((c) => { if (c.rings < c.need && Math.abs(c.lap) > 0.15 && c.lastAng !== null) arcG(b, c.x, GY(c.y), c.kind === 'tree' ? 26 : 52 * (c.big ? 1.25 : 1), K, c.lastAng - c.lap, c.lap, 'gold', 5); });
     if (last && last.kind === 'tree') sc.trees.forEach((c) => { if (c !== last) ringG(b, c.x, GY(c.y), 28 + Math.round(Math.sin(t * 6) * 2), K, 'gold', 4, 4); });
     if (sc.state === 'playing' && !sc.firstRing && !ch.length) { const tg = walking.filter((g) => g.y > 20).sort((a, c) => c.y - a.y)[0]; if (tg) { const n = 96; for (let i = 0; i < n; i++) if ((i + Math.floor(t * 16)) % 12 < 6) b.put(tg.x + Math.cos(i / n * TAU) * 60, GY(tg.y) + Math.sin(i / n * TAU) * 60 * K, 'gold', 4, 0, 1); } }   // the first lesson, drawn on the ground: run round here
     sc.parts.forEach((p) => {
       const q = p.life / p.max, sx = p.x, sy = GY(p.y) - p.z;
-      if (p.kind === 'dust') { const r = p.r * (0.6 + q * 0.9) * (q > 0.6 ? (1 - q) / 0.4 : 1); if (r > 0.8) b.ell(sx, sy, r, r * 0.8, 'cloud', (px, py, nx, ny) => (ny < -0.2 ? 4 : 3)); }
+      if (p.kind === 'dust') { const r = p.r * (0.6 + q * 0.9) * (q > 0.6 ? (1 - q) / 0.4 : 1); if (r > 0.8) b.ell(sx, sy, r, r * 0.8, 'dust', (px, py, nx, ny) => (ny < -0.2 ? 3 : 2)); }
       else if (p.kind === 'chip') { b.rect(sx, sy - 1, 2, 2, 'rock', q < 0.5 ? 5 : 3); b.put(sx, sy + 1, 'ink', 1); }
       else { b.put(sx, sy, p.col, q < 0.5 ? 5 : 4, 0, 1); if (q < 0.6) { b.put(sx + 1, sy, p.col, 4, 0, 1); b.put(sx, sy + 1, p.col, 4, 0, 1); } }
     });
@@ -432,7 +438,7 @@
       const ly = Math.round(H * 0.22);
       text(ctx, 'TANGLE', 180, ly, 6, '#f4ecd8'); text(ctx, 'FOOT', 180, ly + 52, 6, '#ffd23a');
       // a rope under the name, with a loop in it
-      const pts = []; for (let u = 0; u <= 1; u += 0.004) { const a = u * TAU; pts.push(u < 0.42 || u > 0.58 ? [62 + u * 236, ly + 110 + Math.sin(u * 9) * 3] : [180 + Math.sin((u - 0.42) / 0.16 * TAU) * 13, ly + 110 - 13 + Math.cos((u - 0.42) / 0.16 * TAU) * 13 + Math.sin(0.42 * 9) * 3 * 0 + a * 0]); }
+      const pts = []; for (let u = 0; u <= 1; u += 0.004) pts.push([58 + u * 204, ly + 114 + Math.sin(u * 8) * 3]); for (let a = 0; a < TAU; a += 0.03) pts.push([278 - Math.cos(a) * 16, ly + 114 + Math.sin(8) * 3 + Math.sin(a) * 9]);
       blocks(ctx, pts.map(([x, y]) => [x - 1, y - 1]), '#04030a', 5); blocks(ctx, pts, '#94784a', 3); blocks(ctx, pts.filter((q, i) => i % 6 < 3), '#dcc088', 2);
       if (Math.sin(t * 3) > -0.3) text(ctx, sc.touch ? 'TAP TO START' : 'CLICK TO START', 180, Math.round(H * 0.58), 2, '#ffffff');
       fade(); return;
@@ -447,8 +453,8 @@
     text(ctx, `${sc.score}`, 342, 14, 2, '#ffd23a', null, 'right');
     sc.giants.forEach((g) => { if (g.state !== 'walk' || g.need < 2 || g.y <= 0) return; const y = Math.max(40, Math.round(GY(g.y)) - 134); for (let i = 0; i < 2; i++) { const x = Math.round(g.x) - 12 + i * 14; ctx.fillStyle = '#04030a'; ctx.fillRect(x, y + 2, 10, 6); ctx.fillRect(x + 2, y, 6, 10); ctx.fillStyle = i < g.rings ? '#ffd23a' : '#564c6e'; ctx.fillRect(x + 1, y + 3, 8, 4); ctx.fillRect(x + 3, y + 1, 4, 8); if (i >= g.rings) { ctx.fillStyle = '#04030a'; ctx.fillRect(x + 3, y + 3, 4, 4); } } });      // a big one needs two rings: two loops, filled as you make them
     if (sc.showStick && sc.stick && sc.state === 'playing') {     // where your thumb is steering from
-      const r = [], kn = sc.stickNow || sc.stick; for (let i = 0; i < 28; i++) r.push([sc.stick.x + Math.cos(i / 28 * TAU) * 32 - 1, sc.stick.y + Math.sin(i / 28 * TAU) * 32 - 1]);
-      ctx.globalAlpha = 0.3; blocks(ctx, r, '#f4ecd8', 2); ctx.fillStyle = '#f4ecd8'; ctx.fillRect(Math.round(kn.x) - 5, Math.round(kn.y) - 3, 10, 6); ctx.fillRect(Math.round(kn.x) - 3, Math.round(kn.y) - 5, 6, 10); ctx.globalAlpha = 1;
+      const r = [], kn = sc.stickNow || sc.stick, kx = Math.round(kn.x), ky = Math.round(kn.y); for (let i = 0; i < 100; i++) r.push([sc.stick.x + Math.cos(i / 100 * TAU) * 32, sc.stick.y + Math.sin(i / 100 * TAU) * 32]);
+      ctx.globalAlpha = 0.22; blocks(ctx, r, '#f4ecd8', 2); ctx.fillStyle = '#f4ecd8'; ctx.fillRect(kx - 3, ky - 7, 6, 14); ctx.fillRect(kx - 5, ky - 6, 10, 12); ctx.fillRect(kx - 6, ky - 5, 12, 10); ctx.fillRect(kx - 7, ky - 3, 14, 6); ctx.globalAlpha = 1;
     }
     if (sc.state === 'playing') {
       const blink = Math.sin(t * 4) > -0.6;

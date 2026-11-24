@@ -198,7 +198,7 @@
     updateFx(dt) {
       this.parts.forEach((p) => { p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; if (p.g) { p.vz -= p.g * dt; if (p.z < 0) { p.z = 0; p.vz = -p.vz * 0.35; p.vx *= 0.5; p.vy *= 0.5; } } else { const k = Math.max(0, 1 - 4 * dt); p.vx *= k; p.vy *= k; } });
       this.parts = this.parts.filter((p) => p.life < p.max);
-      this.prints.forEach((q) => { q.a += dt; }); this.prints = this.prints.filter((q) => q.a < 7);
+      this.prints.forEach((q) => { q.a += dt; }); this.prints = this.prints.filter((q) => q.a < 4);
       this.pops.forEach((q) => { q.t += dt; }); this.pops = this.pops.filter((q) => q.t < 1.2);
     }
     music(dt) {
